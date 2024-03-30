@@ -27,9 +27,7 @@ const Time = () => {
   };
   return (
     <SafeAreaView style={styles.container}>
-      {/* -------header------- */}
-      <TouchableWithoutFeedback onPress={handleMainScreenPress}>
-      <View style={styles.fullScreen}>
+      <View style={styles.header}>
         <View style={styles.searchBarContainer}>
           {isSearching ? (
             <TextInput
@@ -37,18 +35,16 @@ const Time = () => {
               placeholder="Nhập từ khóa tìm kiếm"
               placeholderTextColor="gray"
               value={searchText}
-              onChangeText={(text) => setSearchText(text)}
+              onChangeText={(text) => {
+                setSearchStarted(true);
+                setSearchText(text);
+              }}
               focusable={false}
             />
           ) : null}
           <TouchableOpacity onPress={handleSearchIconPress}>
             {isSearching ? (
-              <Ionicons
-                style={styles.searchIcon}
-                name="search"
-                size={24}
-                color="black"
-              />
+              <AntDesign name="closecircleo" size={24} color="black" />
             ) : (
               <Ionicons
                 style={styles.searchIcon}
@@ -59,194 +55,69 @@ const Time = () => {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.addFriendButton}>
+          <TouchableOpacity
+            //onPress={handleAddFriendPress}
+            style={styles.addFriendButton}
+          >
             <Ionicons name="person-add-sharp" size={24} color="black" />
           </TouchableOpacity>
         </View>
-        </View>
-      </TouchableWithoutFeedback>
-      {/* ---------------menu bar------------- */}
-      <>
-        <StatusBar backgroundColor="gray" barStyle="dark-content" />
-        <View style={styles.menuView}>
-          <TouchableOpacity
-            style={styles.tabBarButton}
-            onPress={() => nav.navigate("Chatpage")}
-          >
-            <AntDesign
-              name="message1"
-              size={35}
-              color={
-                nav && nav.route && nav.route.name === "Chatpage"
-                  ? "#ff8c00"
-                  : "black"
-              }
-            />
-          </TouchableOpacity>
+      </View>
+     
+      <View style={styles.content}>
+            <Text>center</Text>
 
-          <TouchableOpacity
-            style={styles.tabBarButton}
-            onPress={() => nav.navigate("Friend")}
-          >
-            <FontAwesome
-              name="address-book-o"
-              size={35}
-              color={
-                nav && nav.route && nav.route.name === "Friend"
-                  ? "#ff8c00"
-                  : "black"
-              }
-            />
-          </TouchableOpacity>
+      </View>
+   
+      <StatusBar backgroundColor="gray" barStyle="dark-content" />
+      <View style={styles.menuView}>
+        <TouchableOpacity
+          style={styles.tabBarButton}
+          onPress={() => nav.navigate("Chatpage")}
+        >
+          <AntDesign name="message1" size={35} color="#black" />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.tabBarButton}
-            onPress={() => nav.navigate("Time")}
-          >
-            <Ionicons name="time-outline" size={35} color={"#ff8c00"} />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tabBarButton}
+          onPress={() => nav.navigate("Friend")}
+        >
+          <FontAwesome name="address-book-o" size={35} color="black" />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.tabBarButton}
-            onPress={() => nav.navigate("User")}
-          >
-            <FontAwesome
-              name="user"
-              size={35}
-              color={
-                nav && nav.route && nav.route.name === "User"
-                  ? "#ff8c00"
-                  : "black"
-              }
-            />
-          </TouchableOpacity>
-        </View>
-      </>
+        <TouchableOpacity
+          style={styles.tabBarButton}
+          onPress={() => nav.navigate("Time")}
+        >
+          <Ionicons name="time-outline" size={35} color={"#ff8c00"} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.tabBarButton}
+          onPress={() => nav.navigate("User")}
+        >
+          <FontAwesome
+            name="user"
+            size={35}
+            color={
+              nav && nav.route && nav.route.name === "User"
+                ? "#ff8c00"
+                : "black"
+            }
+          />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 2,
-    backgroundColor: "#fff",
-    alignItems: "center",
+  header: {
     width: "100%",
-    height: "100%",
-  },
-  // header------------------------------
-  tabBarButton: {
-    flex: 1,
-    alignItems: "center",
-  },
-  fullScreen: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  // searchBarContainer: {
-  //   position: "absolute",
-  //   bottom: "10%", // Đảm bảo searchBarContainer nằm trên thanh tab bar
-  //   height: "12%",
-  //   width: "100%",
-  //   flexDirection: "row",
-  //   alignItems: "center",
-  //   backgroundColor: "#ff8c00",
-  //   padding: "2%",
-  //   paddingTop: "5%",
-  // },
-
-  searchInput: {
-    flex: 1,
-    height: 45,
-    backgroundColor: "white",
-    borderRadius: 10,
-    paddingLeft: 15,
-  },
-  searchIcon: {
-    width: 25,
-    height: 25,
-    marginRight: 20,
-    marginLeft: 10,
-  },
-  addFriendButton: {
-    marginLeft: "auto",
-  },
-  addFriendIcon: {
-    width: 25,
-    height: 25,
-  },
-
-  // menubarr------------
-  menuView: {
-    flexDirection: "row",
-    position: "fixed", // Sử dụng position: fixed để làm cho thanh tab bar cố định
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "10%", // Độ cao của thanh tab bar
-    backgroundColor: "#fff",
-    borderTopWidth: 0.4,
-    borderColor: "gray",
-    alignItems: "center",
-    justifyContent: "space-around",
-  },
-
-  menubtn: {
-    height: 65,
-    width: 90,
-    borderColor: "#ff8c00",
+    height: 80,
+    paddingTop: 20,
     backgroundColor: "#ff8c00",
-    borderRadius: 20,
-    alignContent: "center",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
   },
-  menuimg: {
-    resizeMode: "contain",
-    height: 35,
-    width: 35,
-    margin: 5,
-  },
-  mtext: {
-    fontWeight: "bold",
-    color: "white",
-  },
-  menubtn1: {
-    height: 65,
-    width: 100,
-    alignContent: "center",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  menuimg1: {
-    resizeMode: "contain",
-    height: 35,
-    width: 35,
-  },
-  mtext1: {
-    fontWeight: "bold",
-    color: "#ff8c00",
-  },
-
-  menubtn: {
-    height: 70,
-    width: 70,
-    //borderColor: "#ff8c00",
-    //backgroundColor: "#ff8c00",
-    borderRadius: 20,
-    alignContent: "center",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  mtext: {
-    fontWeight: "bold",
-    color: "white",
-  },
-  ////////////////////
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -255,32 +126,28 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   searchBarContainer: {
-    //flex: 1,
     position: "absolute",
-    height: "12%",
+    height: 50,
     width: "100%",
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#ff8c00",
-    padding: "2%",
-    paddingTop: "5%",
+    padding: 10,
   },
   searchInput: {
     flex: 1,
     height: "80%",
     backgroundColor: "white",
     borderRadius: 10,
-    paddingLeft: "2%",
+    paddingLeft: 10,
   },
   searchIcon: {
     width: 25,
     height: 25,
-    marginRight: "4%",
-    marginLeft: "2%",
+    marginRight: 10,
+    marginLeft: 10,
   },
   addFriendButton: {
     marginLeft: "auto",
-    marginRight: "2%",
+    marginRight: 10,
   },
   modalContainer: {
     flex: 1,
@@ -294,10 +161,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: "2%",
+    padding: 10,
   },
   modalOption: {
-    fontSize: "15px",
+    fontSize: 15,
     color: "white",
     fontWeight: "bold",
   },
@@ -309,7 +176,59 @@ const styles = StyleSheet.create({
     height: "15%",
     width: "70%",
     backgroundColor: "#ff8c00",
-    margin: "1%",
+    margin: 5,
+  },
+  content: {
+    flex: 1,
+    width: "100%",
+  },
+  listContainer: {
+    paddingHorizontal: 10,
+    paddingTop: 10,
+  },
+  itemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    backgroundColor: "#f9f9f9",
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    marginRight: 10,
+  },
+  itemDetails: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  itemStatus: {
+    fontSize: 14,
+    color: "gray",
+  },
+  menuView: {
+    flexDirection: "row",
+    position: "fixed",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 65,
+    backgroundColor: "#fff",
+    borderTopWidth: 0.4,
+    borderColor: "gray",
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  tabBarButton: {
+    flex: 1,
+    alignItems: "center",
   },
 });
 

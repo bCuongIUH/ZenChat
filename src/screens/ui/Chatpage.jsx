@@ -208,6 +208,7 @@ export const Chatpage = () => {
                 : "black"
             }
           />
+          
         </TouchableOpacity>
 
         <TouchableOpacity

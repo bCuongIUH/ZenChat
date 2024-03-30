@@ -13,25 +13,12 @@ export const postEmail = async (data) => {
   }
 };
 
-// export const postRegister = async (data) => {
-//   try {
-//     const response = await axios.post(`${API_URL}/auth/register`, data, config);
-//     return response;
-//   } catch (error) {
-//     return error;
-//   }
-// };
-
 export const postRegister = async (data) => {
   try {
     const response = await axios.post(`${API_URL}/auth/register`, data, config);
-    if (response.status === 200) {
-      return response.data; // Trả về dữ liệu từ phản hồi nếu thành công
-    } else {
-      throw new Error('Registration failed'); // Ném một lỗi nếu không thành công
-    }
+    return response;
   } catch (error) {
-    throw error; // Ném lỗi nếu có lỗi xảy ra
+    return error;
   }
 };
 
@@ -66,6 +53,18 @@ export const logoutUser = async () => {
   }
 };
 
+// export const logoutUser = () =>{
+//   return new Promise((reject, resolve) => { 
+//       axios.post(`${API_URL}/auth/logout`, {}, config)
+//       .then(res => {
+//           reject(res);
+//       })
+//       .catch(err => {
+//           resolve(err);
+//       })
+//   })
+   
+// };
 export const getAuthUser = async () => {
   try {
     const response = await axios.get(`${API_URL}/auth/status`, config);
@@ -77,24 +76,25 @@ export const getAuthUser = async () => {
 
 //set cookie
 
-// export const getCookieExist = async () => {
-//   try {
-//     const response = await axios.get(`${API_URL}/auth/checkCookie`, config);
-//     return response;
-//   } catch (error) {
-//     return error;
-//   }
-// };
+export const getCookieExist = () => {
 
-export const removeCookie = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/auth/removeCookie`, config);
-    return response;
-  } catch (error) {
-    return error;
-  }
-};
+  return axios.get(`${API_URL}/auth/checkCookie`, config)
 
+}
+
+
+export const removeCookie = () => {
+  return new Promise((reject, resolve) => {
+      axios.get(`${API_URL}/auth/removeCookie`, config)
+          .then(res => {
+              reject(res);
+          })
+          .catch(err => {
+              resolve(err)
+          })
+  })
+
+}
 export const getListRooms = async () => {
   try {
     const response = await axios.get(`${API_URL}/rooms`, config);

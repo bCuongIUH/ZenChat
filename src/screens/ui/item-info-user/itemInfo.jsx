@@ -1,17 +1,13 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../../../untills/context/AuthContext';
 
-const Info = () => {
+
+const itemInfo = () => {
   const nav = useNavigation();
-
-  const user = {
-    name: 'Bạch Cường',
-    phoneNumber: '0123456789',
-    email: 'bachcuong27@gmail.com',
-    address: '108 Nguyễn Thượng Hiên',
-    imageUrl: 'https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg',
-  };
+  const { user } = useContext(AuthContext);
+ 
 
   const handleGoBack = () => {
     nav.goBack();
@@ -20,12 +16,14 @@ const Info = () => {
   return (
     <View style={styles.container}>
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+        {/* <Image source={{ uri: user.imageUrl }} style={styles.avatar} /> */}
       </View>
-      <Text style={styles.name}>{user.name}</Text>
+      
+      <Text style={styles.info}>{`Tên : ${user.fullName}`}</Text>
       <Text style={styles.info}>{`Phone: ${user.phoneNumber}`}</Text>
+      <Text style={styles.info}>{`Ngày Sinh: ${user.dateOfBirth}`}</Text>
       <Text style={styles.info}>{`Email: ${user.email}`}</Text>
-      <Text style={styles.info}>{`Địa chỉ: ${user.address}`}</Text>
+     
       <TouchableOpacity style={styles.button} onPress={handleGoBack}>
         <Text style={styles.buttonText}>Go Back</Text>
       </TouchableOpacity>
@@ -69,4 +67,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Info;
+export default itemInfo;

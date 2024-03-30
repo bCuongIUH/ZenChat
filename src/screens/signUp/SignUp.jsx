@@ -14,6 +14,8 @@ import { AuthContext } from "../../untills/context/AuthContext";
 import { AxiosError } from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+//import {AsyncStorage} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const SignUp = () => {
   const [fullName, setFullName] = useState("");
@@ -29,7 +31,7 @@ export const SignUp = () => {
   const [errForm, setErrForm] = useState("");
 
   const regexPatterns = {
-    fullName: /^[a-zA-Z\s_-]+$/,
+    fullName: /^[a-zA-Z\sáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđĐ]+$/,
     phoneNumber: /^(0|\+84)[1-9]{9}$/,
     email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     passWord: /^[a-zA-Z\d]{6,}$/,
@@ -42,14 +44,25 @@ export const SignUp = () => {
     setDateOfBirth(date);
   };
 
+  // useEffect(() => {
+  //   const token = AsyncStorage.getItem("token");
+  //   if (token) {
+  //     AsyncStorage.removeItem("token");
+  //     handler.setAuth(undefined);
+  //   }
+  // });
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      localStorage.removeItem("token");
-      handler.setAuth(undefined);
-    }
-  });
-
+    const removeToken = async () => {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        await AsyncStorage.removeItem("token");
+        handler.setAuth(undefined);
+      }
+    };
+  
+    removeToken();
+  }, []);
+  
   const handleSignUp = async (event) => {
     event.preventDefault();
     const data = {
@@ -66,6 +79,7 @@ export const SignUp = () => {
       processedPhoneNumber = `+84${phoneNumber.slice(1)}`;
     }
     setPhoneNumber(processedPhoneNumber);
+
 
     if (!regexPatterns.fullName.test(fullName)) {
       setErrForm("Please enter the name in the correct format.");
@@ -94,13 +108,27 @@ export const SignUp = () => {
     }
     try {
       await postRegister(data)
-        .then((res) => {
-          localStorage.setItem("token", res.data.token);
+        .then((res) => {  
+          console.log(res.data.token);
+          AsyncStorage.setItem("token", res.data.token);
           handler.setAuth(res.data.userDetail);
           navigation.navigate("OTPConfirmationForm");
+          // navigation.navigate("Login");
         })
+    // try {
+    //   await postRegister(data)
+    //     .then((res) => {
+    //       const token = res.data.token;
+    //       if (token) {
+    //         AsyncStorage.setItem("token", token);
+    //         handler.setAuth(res.data.userDetail);
+    //         navigation.navigate("OTPConfirmationForm");
+    //       } else {
+    //         console.log("Token is empty or invalid.");
+    //       }
+    //     })
         .catch((err) => {
-          if (AxiosError.ERR_BAD_REQUEST) {
+          if (err.response && err.response.data && err.response.data.message) {
             setErrForm(err.response.data.message);
             errFormRef.current.style.top = "0";
             setTimeout(() => {
@@ -126,7 +154,7 @@ export const SignUp = () => {
               style={styles.inputText}
               placeholder="FullName"
               value={fullName}
-              onChangeText={setFullName}
+              onChange={(e) => setFullName(e.target.value)}
             />
           </View>
           <View style={styles.inputView}>
@@ -134,7 +162,7 @@ export const SignUp = () => {
               style={styles.inputText}
               placeholder="Date of Birth"
               value={dateOfBirth}
-              onChangeText={setDateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
             />
             {/* 
           <div style={{ width: "2px" }}>
@@ -154,7 +182,7 @@ export const SignUp = () => {
               style={styles.inputText}
               placeholder="Phone Number"
               value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </View>
           <View style={styles.inputView}>
@@ -170,7 +198,7 @@ export const SignUp = () => {
               style={styles.inputText}
               placeholder="Password"
               value={passWord}
-              onChangeText={setPassword}
+              onChange={(e) => setPassword(e.target.value)}
               secureTextEntry
             />
             <View style={styles.eyeIcon}>{/* Add your eye icon here */}</View>
@@ -180,7 +208,7 @@ export const SignUp = () => {
               style={styles.inputText}
               placeholder="Avatar"
               value={avatar}
-              onChangeText={setAvatar}
+              onChange={(e) => setAvatar(e.target.value)}
             />
           </View>
           <TouchableOpacity style={styles.signUpBtn} onPress={handleSignUp}>
@@ -269,3 +297,5 @@ const styles = StyleSheet.create({
 });
 
 export default SignUp;
+
+

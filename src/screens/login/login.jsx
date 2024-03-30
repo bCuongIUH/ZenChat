@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { getCookieExist,postLogin } from "../../untills/api";
-
+import { getCookieExist, postLogin } from "../../untills/api";
 
 const Login = () => {
   const thongbao = useRef(null);
@@ -17,87 +16,54 @@ const Login = () => {
   const navigation = useNavigation();
   const [showError, setShowError] = useState(false);
 
+  useEffect(() => {
+    getCookieExist()
+      .then((data) => {
+        if (data.status === 200) {
+          navigation.navigate("Login");
+        } else {
+          navigation.navigate("Chatpage");
+        }
+      })
+      .catch(() => {
+        navigation.navigate("Chatpage");
+      });
+  }, []);
 
-//  useEffect(() => {
-//     getCookieExist()
-//     .then((data) => {
-//       if (data.status === 200) {
-//         navigation.navigate("login");
-//       } else {
-//         navigation.navigate("Chatpage");
-//       }
-//     })
-//     .catch(() => {
-//       navigation.navigate("Chatpage");
-//     });
-// }, [])
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const data = {
+      username,
+      password,
+    };
 
-// const handleLogin = async (e) => {
-//   e.preventDefault();
-//   const data = {
-//     username,
-//     password,
-//   }
+    try {
+      const response = await postLogin(data);
 
-//   try {
-//     await postLogin(data)
-
-//         .then(data => {
-//             navigation.navigate("Chatpage");
-//         })
-//         .catch(err => {
-//             if (err.response.status === 401) {
-
-//                 thongbao.current.style.right = "0";
-//                 setTimeout(() => {
-//                     thongbao.current.style.right = "-500px";
-//                 }, 1000);
-//             }
-//             else {
-//                 console.log("Lỗi khác");
-//             }
-//         })
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
-
-
-const handleLogin = async (e) => {
-  e.preventDefault();
-  const data = {
-    username,
-    password
+      // Thành công
+      navigation.navigate("Chatpage");
+      //   } catch (error) {
+      //     // Xử lý lỗi
+      //     if (error.response && error.response.status === 401) {
+      //       // Xử lý lỗi 401
+      //       thongbao.current.style.right = '0';
+      //       setTimeout(() => {
+      //         thongbao.current.style.right = '-500px';
+      //       }, 1000);
+      //     } else {
+      //       console.log('Lỗi khác', error);
+      //     }
+      //   }
+      // };
+    } catch (error) {
+      // Xử lý lỗi
+      if (error.response && error.response.status === 401) {
+        setShowError(true); // Hiển thị thông báo lỗi
+      } else {
+        console.log("Lỗi khác", error);
+      }
+    }
   };
-
-  try {
-    const response = await postLogin(data);
-    
-    // Thành công
-    navigation.navigate('Chatpage');
-//   } catch (error) {
-//     // Xử lý lỗi
-//     if (error.response && error.response.status === 401) {
-//       // Xử lý lỗi 401
-//       thongbao.current.style.right = '0';
-//       setTimeout(() => {
-//         thongbao.current.style.right = '-500px';
-//       }, 1000);
-//     } else {
-//       console.log('Lỗi khác', error);
-//     }
-//   }
-// };
-
-} catch (error) {
-  // Xử lý lỗi
-  if (error.response && error.response.status === 401) {
-    setShowError(true); // Hiển thị thông báo lỗi
-  } else {
-    console.log('Lỗi khác', error);
-  }
-}
-};
 
   return (
     <View style={styles.container}>
@@ -105,8 +71,8 @@ const handleLogin = async (e) => {
         <Text style={styles.logo}>ZenChat</Text>
       </View>
       {showError && (
-          <Text style={styles.errorMessage}>Incorrect username or password.</Text>
-        )}
+        <Text style={styles.errorMessage}>Incorrect username or password.</Text>
+      )}
       <Text style={styles.textIv}>UserName</Text>
       <View style={styles.inputView}>
         <TextInput
@@ -129,7 +95,9 @@ const handleLogin = async (e) => {
         />
       </View>
       {/* màn hình quên mật khẩu là forgotpasswordScreen */}
-      <TouchableOpacity onPress={() => navigation.navigate("ForgotPasswordScreen")}> 
+      <TouchableOpacity
+        onPress={() => navigation.navigate("ForgotPasswordScreen")}
+      >
         <Text style={styles.forgot}>Quên mật khẩu ?</Text>
       </TouchableOpacity>
 
@@ -181,10 +149,10 @@ const styles = StyleSheet.create({
   },
   inputText: {
     height: 100,
-    width:"100%",
+    width: "100%",
     color: "black",
     fontSize: 15,
-    outlineStyle : 'none',
+    outlineStyle: "none",
     fontWeight: "500",
   },
   forgot: {
@@ -208,13 +176,13 @@ const styles = StyleSheet.create({
   },
   thongbao: {
     borderWidth: 3,
-    borderColor: 'black',
+    borderColor: "black",
     padding: 30,
     borderRadius: 5,
-    backgroundColor: 'rgb(210, 212, 213)',
+    backgroundColor: "rgb(210, 212, 213)",
     fontSize: 20,
     width: 300,
-    color: 'rgb(223, 98, 36)',
+    color: "rgb(223, 98, 36)",
   },
   errorMessage: {
     color: "red",
