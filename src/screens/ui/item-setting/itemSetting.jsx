@@ -23,7 +23,7 @@ import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../../untills/context/AuthContext";
 import { logoutUser, removeCookie } from "../../../untills/api";
 
-const itemSetting = () => {
+const ItemSetting = () => {
   const navigation = useNavigation();
   const { user } = useContext(AuthContext);
 
@@ -31,7 +31,8 @@ const itemSetting = () => {
     logoutUser({})
       .then((res) => {
         removeCookie();
-        window.location.href = "Login";
+        //window.location.href = "Login";
+        navigation.navigate("Login")
       })
       .catch((err) => {
         console.log("lỗi");
@@ -563,4 +564,4 @@ const itemSetting = () => {
     </ScrollView>
   );
 };
-export default itemSetting;
+export default ItemSetting;

@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../../untills/context/AuthContext';
 
 
-const itemInfo = () => {
+const ItemInfo = () => {
   const nav = useNavigation();
   const { user } = useContext(AuthContext);
  
@@ -67,4 +67,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default itemInfo;
+export default ItemInfo;

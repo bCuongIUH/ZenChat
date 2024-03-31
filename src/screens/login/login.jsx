@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontWeight: "bold",
-    fontSize: "65px",
+    fontSize: 65,
     color: "#ff8c00",
     marginBottom: 40,
   },
@@ -152,7 +152,8 @@ const styles = StyleSheet.create({
     width: "100%",
     color: "black",
     fontSize: 15,
-    outlineStyle: "none",
+    //outlineStyle: "none",
+    borderWidth: 0,  // Đặt độ dày đường viền là 0 để ẩn nó đi
     fontWeight: "500",
   },
   forgot: {

@@ -33,17 +33,19 @@ export const Friend = () => {
 
   const handleAddFriendPress = () => {
     setActionModalVisible(true);
+    
   };
 
   const handleCreateChatPress = () => {
-    setActionModalVisible(false);
+    setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
+    nav.navigate("itemAddFriend")
   };
 
   const handleModalClose = () => {
     setActionModalVisible(false);
   };
 
-  const handleMainScreenPress = () => {
+  const handleMainScreenPress = () => { 
     setIsSearching(false);
   };
 
@@ -153,7 +155,7 @@ export const Friend = () => {
               style={styles.modalbtn}
               onPress={handleCreateChatPress}
             >
-              <Text style={styles.modalOption}>Tạo cuộc trò chuyện mới</Text>
+              <Text style={styles.modalOption}>Thêm bạn</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalbtn}

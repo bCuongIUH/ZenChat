@@ -14,7 +14,7 @@ const HomeScreen = () => {
   };
 
   return (
-    <ImageBackground
+    <ImageBackground 
     source={require("./image.png")}
       style={styles.background}
       resizeMode="cover"
