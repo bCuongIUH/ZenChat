@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Image,
   TextInput,
-  Dimensions
+  Dimensions,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -72,7 +72,7 @@ const ItemAddFriend = () => {
       <TouchableOpacity style={styles.saveButton} onPress={handleAddFriend}>
         <Text style={styles.saveButtonText}>Tìm kiếm</Text>
       </TouchableOpacity>
-
+      {/* code thêm 1 layout khi tìm kiếm bạn thành công qua số điện thoại đã nhập  */}
       {/* Hiển thị lỗi */}
       <View ref={errFormRef} style={styles.errorContainer}>
         <Text style={styles.errorText}>{errForm}</Text>

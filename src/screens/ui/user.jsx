@@ -92,6 +92,7 @@ export const User = () => {
       {/* phần nội dung chính */}
       <View style={styles.content}>
         <Text>nội dung chính nằm ở đây </Text>
+        
       </View>
 
       <StatusBar backgroundColor="gray" barStyle="dark-content" />

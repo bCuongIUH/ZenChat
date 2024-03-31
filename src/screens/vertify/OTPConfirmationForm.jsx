@@ -25,6 +25,12 @@ const OTPConfirmationForm = () => {
   const [announcement, setAnnouncement] = useState("");
   const navigation = useNavigation();
 
+
+// 4/1 hoàn thành chức năng tự động submit khi kiểm tra otpValues every ko rổng k NaN thì thực hiện handsubmit.....
+//  màn hình này có thể code thêm 1 chức năng timeout nút sendcode (60s)
+
+
+
   useEffect(() => {
     const fetchToken = async () => {
       try {
@@ -122,7 +128,7 @@ const OTPConfirmationForm = () => {
       const res = await postEmail(data.auth);
       if (res.status === 200) {
         setAnnouncement("Sending email success");
-//setShowSubmitButton(true);
+//setShowSubmitButton(true); // đóng thẻ k hien submit
       }
     } catch (error) {
       setAnnouncement("Sending email failed");
@@ -150,7 +156,7 @@ const OTPConfirmationForm = () => {
           </View>
           <Text style={styles.heading}>Verify Account</Text>
           <Text style={styles.message}>
-            Please enter the 6-digit verification code sent to email{" "}
+            Vui lòng nhập mã xác minh 6 số được gửi tới địa chỉ email{" "}
             <View style={styles.centeredTextContainer}>
               <Text style={styles.centeredText}>{data.auth?.email}</Text>
             </View>
@@ -310,7 +316,7 @@ const styles = StyleSheet.create({
   centeredTextContainer: {
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20, // Thêm khoảng cách dưới nếu cần
+    marginBottom: 20,
   },
   centeredText: {
     fontSize: 16,
