@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   TextInput,
+  Dimensions
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -79,7 +80,7 @@ const ItemAddFriend = () => {
     </View>
   );
 };
-
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,

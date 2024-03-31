@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity,Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../../untills/context/AuthContext';
 
@@ -30,7 +30,7 @@ const ItemInfo = () => {
     </View>
   );
 };
-
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,

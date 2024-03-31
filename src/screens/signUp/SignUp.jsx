@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Dimensions
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { postRegister } from "../../untills/api";
@@ -231,14 +232,14 @@ export const SignUp = () => {
     </View>
   );
 };
-
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",
+    width: "100%", //100%
   },
   logo: {
     fontWeight: "bold",

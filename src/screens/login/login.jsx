@@ -5,10 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getCookieExist, postLogin } from "../../untills/api";
-import { Dimensions } from 'react-native';
+import { Dimensions } from "react-native";
 const Login = () => {
   const thongbao = useRef(null);
   const [username, setEmail] = useState("");
@@ -17,10 +18,12 @@ const Login = () => {
   const [showError, setShowError] = useState(false);
 
   // này quy đổi css từ web sang react tránh xung đột vd : width : width *0.2, => 20% , còn 20px = 20
-  const windowDimensions = Dimensions.get('window');
-  const width = windowDimensions.width;
-  const height = windowDimensions.height;
-  
+  // const windowDimensions = Dimensions.get('window');
+  // const width = windowDimensions.width;
+  // const height = windowDimensions.height;
+
+  // const {width, height} = useWindowDimensions();
+
   useEffect(() => {
     getCookieExist()
       .then((data) => {
@@ -122,6 +125,8 @@ const Login = () => {
     </View>
   );
 };
+
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -136,7 +141,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   inputView: {
-    width: "85%",
+     //width: "85%",
+    width: width * 0.85,
     backgroundColor: "#ced4da",
     borderRadius: 10,
     height: 50,
@@ -145,7 +151,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   textIv: {
-    width: "70%",
+    //width: "70%",
+    width: width * 0.7,
     margin: 4,
     fontStyle: "italic",
     fontWeight: "bold",
@@ -154,12 +161,13 @@ const styles = StyleSheet.create({
   },
   inputText: {
     height: 100,
-    width: "100%",
+    //width: "100%",
+    //width : width * 1,
     color: "black",
     fontSize: 15,
-    //outlineStyle: "none",
-    borderWidth: 0,  // Đặt độ dày đường viền là 0 để ẩn nó đi
-    fontWeight: "normal",
+    outlineStyle: "none",
+    borderWidth: 0, // Đặt độ dày đường viền là 0 để ẩn nó đi
+    fontWeight: "bold",
   },
   forgot: {
     color: "#ff8c00",
@@ -167,7 +175,8 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   loginBtn: {
-    width: "80%",
+    // width: "80%",
+    width : width * 0.8,
     backgroundColor: "#ff8c00",
     borderRadius: 25,
     height: 50,

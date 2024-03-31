@@ -6,16 +6,16 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [step, setStep] = useState(1); // Bước 1: Nhập email, Bước 2: Nhập mã xác nhận và mật khẩu mới
+  const [step, setStep] = useState(1); 
 
   const handleSendVerificationCode = () => {
-    // Ở đây, bạn có thể thực hiện gửi mã xác nhận hoặc liên kết đặt lại mật khẩu đến địa chỉ email
+    
    
     setStep(2);
   };
 
   const handleResetPassword = () => {
-    // Ở đây, bạn có thể thực hiện logic đặt lại mật khẩu
+    
     
     navigation.navigate('Login'); // Chuyển đến màn hình đăng nhập
   };
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
-    width: '100%',
+    width: '100',
   
 
   },
