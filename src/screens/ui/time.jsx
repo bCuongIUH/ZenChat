@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -10,21 +10,46 @@ import {
   Text,
   StatusBar,
   TouchableWithoutFeedback,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, AntDesign } from "@expo/vector-icons";
 
-import { FontAwesome, AntDesign, Ionicons } from "@expo/vector-icons";
-
-const Time = () => {
+export const Time = () => {
   const nav = useNavigation();
-  const [isSearching, setIsSearching] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [isActionModalVisible, setActionModalVisible] = useState(false);
+  const [todoList, setTodoList] = useState([]);
+  const [filteredTodoList, setFilteredTodoList] = useState([]);
+
+  const [searchStarted, setSearchStarted] = useState(false);
+
   const handleSearchIconPress = () => {
+    setSearchStarted(false);
     setIsSearching(!isSearching);
   };
-  const handleMainScreenPress = () => {
-    setIsSearching(false); // Đóng thanh tìm kiếm khi click vào màn hình chính
+
+  const handleAddFriendPress = () => {
+    setActionModalVisible(true);
   };
+
+  const handleCreateChatPress = () => {
+    setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
+    nav.navigate("ItemAddFriend");
+  };
+
+  const handleModalClose = () => {
+    setActionModalVisible(false);
+  };
+
+  const handleMainScreenPress = () => {
+    setIsSearching(false);
+  };
+
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -56,19 +81,42 @@ const Time = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            //onPress={handleAddFriendPress}
+            onPress={handleAddFriendPress}
             style={styles.addFriendButton}
           >
             <Ionicons name="person-add-sharp" size={24} color="black" />
           </TouchableOpacity>
         </View>
       </View>
-     
-      <View style={styles.content}>
-            <Text>center</Text>
 
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isActionModalVisible}
+        onRequestClose={handleModalClose}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalcontent}>
+            <TouchableOpacity
+              style={styles.modalbtn}
+              onPress={handleCreateChatPress}
+            >
+              <Text style={styles.modalOption}>Thêm nhật ký</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalbtn}
+              onPress={handleModalClose}
+            >
+              <Text style={styles.modalOption}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <View style={styles.content}>
+        <Text>nội dung chính nằm ở đây </Text>
       </View>
-   
+
       <StatusBar backgroundColor="gray" barStyle="dark-content" />
       <View style={styles.menuView}>
         <TouchableOpacity
@@ -89,7 +137,7 @@ const Time = () => {
           style={styles.tabBarButton}
           onPress={() => nav.navigate("Time")}
         >
-          <Ionicons name="time-outline" size={35} color={"#ff8c00"} />
+          <Ionicons name="time-outline" size={35} color="#ff8c00" />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -110,10 +158,11 @@ const Time = () => {
     </SafeAreaView>
   );
 };
-
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   header: {
-    width: "100%",
+    //width: "100%",
+    width: width * 1,
     height: 80,
     paddingTop: 20,
     backgroundColor: "#ff8c00",
@@ -122,19 +171,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    width: "100%",
-    height: "100%",
+    // width: "100%",
+    // height: "100%",
+    width: width * 1,
+    height: height * 1,
   },
   searchBarContainer: {
     position: "absolute",
     height: 50,
-    width: "100%",
+    // width: "100%",
+    width: width * 1,
     flexDirection: "row",
     padding: 10,
   },
   searchInput: {
     flex: 1,
-    height: "80%",
+    // height: "80%",
+    height: 35,
     backgroundColor: "white",
     borderRadius: 10,
     paddingLeft: 10,
@@ -155,7 +208,8 @@ const styles = StyleSheet.create({
   },
   modalcontent: {
     backgroundColor: "gray",
-    height: "25%",
+    //height: "25%",
+    height: height * 0.25,
     justifyContent: "center",
     alignContent: "center",
     alignItems: "center",
@@ -173,14 +227,16 @@ const styles = StyleSheet.create({
     alignContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    height: "15%",
-    width: "70%",
+
+    height: 30,
+    width: width * 0.7,
     backgroundColor: "#ff8c00",
     margin: 5,
   },
   content: {
     flex: 1,
-    width: "100%",
+    // width: "100%",
+    width: width * 1,
   },
   listContainer: {
     paddingHorizontal: 10,

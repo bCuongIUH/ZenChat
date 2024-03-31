@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   TextInput,
+  Dimensions,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -17,6 +18,7 @@ const ItemUpdateUser = () => {
   const { user } = useContext(AuthContext);
   const [fullName, setfullName] = useState(user.fullName);
   const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth);
+ 
   const [gender, setGender] = useState(user.gender);
 
   const handleSave = () => {};
@@ -107,7 +109,7 @@ const ItemUpdateUser = () => {
     </View>
   );
 };
-
+const {width, height} = Dimensions.get('window')
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -135,7 +137,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   backgroundImage: {
-    width: "100%",
+    // width: "100%",
+    width: width* 1,
     height: 150,
     resizeMode: "cover",
     borderRadius: 10,

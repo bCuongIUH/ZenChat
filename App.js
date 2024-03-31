@@ -19,7 +19,7 @@ import Friend from "./src/screens/ui/friend";
 import User from "./src/screens/ui/user";
 import ItemInfo from "./src/screens/ui/item-info-user/itemInfo";
 import ItemSetting from "./src/screens/ui/item-setting/itemSetting";
-import { SocketContext, socket } from "./src/untills/context/SocketContext";
+// import { SocketContext, socket } from "./src/untills/context/SocketContext";
 import ItemSecurity from "./src/screens/ui/item-setting-security/itemSecurity";
 import ItemUpdateUser from "./src/screens/ui/item-update/itemUpdateUser";
 import ItemAddFriend from "./src/screens/ui/item-Friend/itemAddFriend";
@@ -34,7 +34,7 @@ function App() {
       <NavigationContainer>
         <AuthContext.Provider value={{ user, updateAuthUser: setUser }}>
           <SignupContext>
-            <SocketContext.Provider value={socket}>
+            {/* <SocketContext.Provider value={socket}> */}
               {/* <NavigationContainer> */}
               <Stack.Navigator
                 initialRouteName="Home"
@@ -71,7 +71,7 @@ function App() {
                 />
                 <Stack.Screen name="ItemAddFriend" component={ItemAddFriend} />
               </Stack.Navigator>
-            </SocketContext.Provider>
+            {/* </SocketContext.Provider> */}
           </SignupContext>
         </AuthContext.Provider>
       </NavigationContainer>

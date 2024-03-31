@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -10,19 +10,41 @@ import {
   Text,
   StatusBar,
   TouchableWithoutFeedback,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { FontAwesome, AntDesign, Ionicons } from "@expo/vector-icons";
-import { AuthContext } from "../../untills/context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, AntDesign } from "@expo/vector-icons";
 
-const User = () => {
+export const User = () => {
   const nav = useNavigation();
-  const [isSearching, setIsSearching] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const { user } = useContext(AuthContext);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isActionModalVisible, setActionModalVisible] = useState(false);
+  const [todoList, setTodoList] = useState([]);
+  const [filteredTodoList, setFilteredTodoList] = useState([]);
+
+  const [searchStarted, setSearchStarted] = useState(false);
 
   const handleSearchIconPress = () => {
-    setIsSearching((prevState) => !prevState);
+    setSearchStarted(false);
+    setIsSearching(!isSearching);
+  };
+
+  const handleAddFriendPress = () => {
+
+    setActionModalVisible(true);
+    nav.navigate("ItemSetting");
+  };
+
+  const handleCreateChatPress = () => {
+    setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
+    nav.navigate("ItemAddFriend");
+  };
+
+  const handleModalClose = () => {
+    setActionModalVisible(false);
   };
 
   const handleMainScreenPress = () => {
@@ -60,35 +82,17 @@ const User = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => nav.navigate("ItemSetting")}
+            onPress={handleAddFriendPress}
             style={styles.addFriendButton}
           >
             <AntDesign name="setting" size={24} color="black" />
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* ------------------------------------------------------Body---------------------------------------------------- */}
-      <View style={styles.body}>
-        <View style={styles.avatarContainer}>
-          <Image style={styles.avatar} source={{ uri: user.avatar }} />
-          <TouchableOpacity
-            onPress={() => nav.navigate("ItemInfo")}
-            style={styles.option}
-          >
-            <Text style={styles.optiontext}>Thông Tin Cá Nhân</Text>
-          </TouchableOpacity>
-        </View>
+      {/* phần nội dung chính */}
+      <View style={styles.content}>
+        <Text>nội dung chính nằm ở đây </Text>
       </View>
-
-      <TouchableOpacity
-        style={styles.settingButton}
-        onPress={() => nav.navigate("AccountSecurity")}
-      >
-        <Text style={styles.settingButtonText}>Tài Khoản và Bảo Mật</Text>
-      </TouchableOpacity>
-
-      {/* ------------------------------------------------------Body---------------------------------------------------- */}
 
       <StatusBar backgroundColor="gray" barStyle="dark-content" />
       <View style={styles.menuView}>
@@ -96,53 +100,42 @@ const User = () => {
           style={styles.tabBarButton}
           onPress={() => nav.navigate("Chatpage")}
         >
-          <AntDesign name="message1" size={35} color="black" />
+          <AntDesign name="message1" size={35} color="#black" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.tabBarButton}
           onPress={() => nav.navigate("Friend")}
         >
-          <FontAwesome
-            name="address-book-o"
-            size={35}
-            color={
-              nav && nav.route && nav.route.name === "Friend"
-                ? "#ff8c00"
-                : "black"
-            }
-          />
+          <FontAwesome name="address-book-o" size={35} color="black" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.tabBarButton}
           onPress={() => nav.navigate("Time")}
         >
-          <Ionicons
-            name="time-outline"
-            size={35}
-            color={
-              nav && nav.route && nav.route.name === "Time"
-                ? "#ff8c00"
-                : "black"
-            }
-          />
+          <Ionicons name="time-outline" size={35} color="black" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.tabBarButton}
           onPress={() => nav.navigate("User")}
         >
-          <FontAwesome name="user" size={35} color={"#ff8c00"} />
+          <FontAwesome
+            name="user"
+            size={35}
+            color="ff8c00"
+          />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
-
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   header: {
-    width: "100%",
+    //width: "100%",
+    width: width * 1,
     height: 80,
     paddingTop: 20,
     backgroundColor: "#ff8c00",
@@ -151,19 +144,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    width: "100%",
-    height: "100%",
+    // width: "100%",
+    // height: "100%",
+    width: width * 1,
+    height: height * 1,
   },
   searchBarContainer: {
     position: "absolute",
     height: 50,
-    width: "100%",
+    // width: "100%",
+    width: width * 1,
     flexDirection: "row",
     padding: 10,
   },
   searchInput: {
     flex: 1,
-    height: "80%",
+    // height: "80%",
+    height: 35,
     backgroundColor: "white",
     borderRadius: 10,
     paddingLeft: 10,
@@ -184,7 +181,8 @@ const styles = StyleSheet.create({
   },
   modalcontent: {
     backgroundColor: "gray",
-    height: "25%",
+    //height: "25%",
+    height: height * 0.25,
     justifyContent: "center",
     alignContent: "center",
     alignItems: "center",
@@ -202,14 +200,16 @@ const styles = StyleSheet.create({
     alignContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    height: "15%",
-    width: "70%",
+
+    height: 30,
+    width: width * 0.7,
     backgroundColor: "#ff8c00",
     margin: 5,
   },
   content: {
     flex: 1,
-    width: "100%",
+    // width: "100%",
+    width: width * 1,
   },
   listContainer: {
     paddingHorizontal: 10,
@@ -229,7 +229,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     marginRight: 10,
-    borderRadius: 90,
   },
   itemDetails: {
     flex: 1,
@@ -259,62 +258,6 @@ const styles = StyleSheet.create({
   tabBarButton: {
     flex: 1,
     alignItems: "center",
-  },
-  //------------------------------------body------------------------------------
-  body: {
-    flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-    marginTop: 20,
-    flexDirection: "row",
-  },
-  avatarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 75,
-    resizeMode: "contain",
-    marginRight: 10,
-  },
-  option: {
-    height: 40,
-    borderBottomWidth: 0.5,
-    borderTopWidth: 0.5,
-    margin: 2,
-    fontSize: 14,
-  },
-  accountButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#ff8c00",
-    height: 40,
-    width: "100%",
-    marginTop: 20,
-  },
-  accountButtonText: {
-    fontSize: 16,
-    color: "white",
-  },
-  settingButton: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ff8c00",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    width: "100%",
-    marginTop: 20,
-  },
-  settingButtonText: {
-    color: "white",
-    fontSize: 16,
   },
 });
 

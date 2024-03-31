@@ -11,6 +11,7 @@ import {
   StatusBar,
   TouchableWithoutFeedback,
   FlatList,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,19 +34,18 @@ export const Friend = () => {
 
   const handleAddFriendPress = () => {
     setActionModalVisible(true);
-    
   };
 
   const handleCreateChatPress = () => {
     setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
-    nav.navigate("itemAddFriend")
+    nav.navigate("itemAddFriend");
   };
 
   const handleModalClose = () => {
     setActionModalVisible(false);
   };
 
-  const handleMainScreenPress = () => { 
+  const handleMainScreenPress = () => {
     setIsSearching(false);
   };
 
@@ -225,10 +225,11 @@ export const Friend = () => {
     </SafeAreaView>
   );
 };
-
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   header: {
-    width: "100%",
+    //width: "100%",
+    width: width * 1,
     height: 80,
     paddingTop: 20,
     backgroundColor: "#ff8c00",
@@ -237,19 +238,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    width: "100%",
-    height: "100%",
+    // width: "100%",
+    // height: "100%",
+    width: width * 1,
+    height: height * 1,
   },
   searchBarContainer: {
     position: "absolute",
     height: 50,
-    width: "100%",
+    // width: "100%",
+    width: width * 1,
     flexDirection: "row",
     padding: 10,
   },
   searchInput: {
     flex: 1,
-    height: "80%",
+    // height: "80%",
+    height: 35,
     backgroundColor: "white",
     borderRadius: 10,
     paddingLeft: 10,
@@ -270,7 +275,8 @@ const styles = StyleSheet.create({
   },
   modalcontent: {
     backgroundColor: "gray",
-    height: "25%",
+    //height: "25%",
+    height: height * 0.25,
     justifyContent: "center",
     alignContent: "center",
     alignItems: "center",
@@ -288,14 +294,16 @@ const styles = StyleSheet.create({
     alignContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    height: "15%",
-    width: "70%",
+    
+    height :30,
+    width : width * 0.7,
     backgroundColor: "#ff8c00",
     margin: 5,
   },
   content: {
     flex: 1,
-    width: "100%",
+    // width: "100%",
+    width : width *1,
   },
   listContainer: {
     paddingHorizontal: 10,

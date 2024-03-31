@@ -5,6 +5,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 
 import React, { useContext, useState } from "react";
@@ -67,7 +68,7 @@ const ItemSecurity = () => {
     </ScrollView>
   );
 };
-
+const {width, height} = Dimensions.get('window')
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
@@ -106,8 +107,10 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   image: {
-    width: "100%",
-    height: "100%",
+    // width: "100%",
+    // height: "100%",
+    width :width*1,
+    height : height *1,
     resizeMode: "cover",
   },
   textContainer: {

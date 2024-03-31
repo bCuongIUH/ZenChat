@@ -10,19 +10,13 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { getCookieExist, postLogin } from "../../untills/api";
 import { Dimensions } from "react-native";
+
 const Login = () => {
   const thongbao = useRef(null);
   const [username, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
   const [showError, setShowError] = useState(false);
-
-  // này quy đổi css từ web sang react tránh xung đột vd : width : width *0.2, => 20% , còn 20px = 20
-  // const windowDimensions = Dimensions.get('window');
-  // const width = windowDimensions.width;
-  // const height = windowDimensions.height;
-
-  // const {width, height} = useWindowDimensions();
 
   useEffect(() => {
     getCookieExist()
@@ -47,26 +41,12 @@ const Login = () => {
 
     try {
       const response = await postLogin(data);
-
       // Thành công
       navigation.navigate("Chatpage");
-      //   } catch (error) {
-      //     // Xử lý lỗi
-      //     if (error.response && error.response.status === 401) {
-      //       // Xử lý lỗi 401
-      //       thongbao.current.style.right = '0';
-      //       setTimeout(() => {
-      //         thongbao.current.style.right = '-500px';
-      //       }, 1000);
-      //     } else {
-      //       console.log('Lỗi khác', error);
-      //     }
-      //   }
-      // };
     } catch (error) {
       // Xử lý lỗi
       if (error.response && error.response.status === 401) {
-        setShowError(true); // Hiển thị thông báo lỗi
+        setShowError("Sai tài khoản hoặc mật khẩu!"); // Hiển thị thông báo lỗi
       } else {
         console.log("Lỗi khác", error);
       }
@@ -78,9 +58,6 @@ const Login = () => {
       <View style={{}}>
         <Text style={styles.logo}>ZenChat</Text>
       </View>
-      {showError && (
-        <Text style={styles.errorMessage}>Incorrect username or password.</Text>
-      )}
       <Text style={styles.textIv}>UserName</Text>
       <View style={styles.inputView}>
         <TextInput
@@ -90,6 +67,7 @@ const Login = () => {
           value={username}
           onChange={(e) => setEmail(e.target.value)}
         />
+        {showError && <Text style={styles.errorMessage}>{showError}</Text>}
       </View>
       <Text style={styles.textIv}>Mật Khẩu</Text>
       <View style={styles.inputView}>
@@ -102,7 +80,6 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
       </View>
-      {/* màn hình quên mật khẩu là forgotpasswordScreen */}
       <TouchableOpacity
         onPress={() => navigation.navigate("ForgotPasswordScreen")}
       >
@@ -141,7 +118,6 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   inputView: {
-     //width: "85%",
     width: width * 0.85,
     backgroundColor: "#ced4da",
     borderRadius: 10,
@@ -149,9 +125,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     justifyContent: "center",
     padding: 20,
+    position: "relative", // Đặt vị trí của phần tử cha là relative
   },
   textIv: {
-    //width: "70%",
     width: width * 0.7,
     margin: 4,
     fontStyle: "italic",
@@ -161,12 +137,10 @@ const styles = StyleSheet.create({
   },
   inputText: {
     height: 100,
-    //width: "100%",
-    //width : width * 1,
     color: "black",
     fontSize: 15,
-    outlineStyle: "none",
-    borderWidth: 0, // Đặt độ dày đường viền là 0 để ẩn nó đi
+    outlineStyle: 0,
+    borderWidth: 0,
     fontWeight: "bold",
   },
   forgot: {
@@ -175,8 +149,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   loginBtn: {
-    // width: "80%",
-    width : width * 0.8,
+    width: width * 0.8,
     backgroundColor: "#ff8c00",
     borderRadius: 25,
     height: 50,
@@ -189,20 +162,12 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "normal",
   },
-  thongbao: {
-    borderWidth: 3,
-    borderColor: "black",
-    padding: 30,
-    borderRadius: 5,
-    backgroundColor: "rgb(210, 212, 213)",
-    fontSize: 20,
-    width: 300,
-    color: "rgb(223, 98, 36)",
-  },
   errorMessage: {
     color: "red",
     fontSize: 12,
     marginTop: 5,
+    position: "absolute", // Đặt vị trí của phần tử con là absolute
+    bottom: 0, // Hiển thị dưới phần tử cha
   },
 });
 

@@ -5,13 +5,14 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import verifiedImage from "./verified.gif"; // Import image
 import { Auth } from "../../untills/context/SignupContext";
 import { postEmail, postValidRegister, removeCookie } from "../../untills/api";
-// import {AsyncStorage} from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const OTPConfirmationForm = () => {
   const [isCorrectOTP, setIsCorrectOTP] = useState(false);
   const [otpValues, setOTPValues] = useState(["", "", "", "", "", ""]);
@@ -41,6 +42,7 @@ const OTPConfirmationForm = () => {
 
     fetchToken();
   }, []);
+
   useEffect(() => {
     if (showError) {
       const timeout = setTimeout(() => {
@@ -49,6 +51,12 @@ const OTPConfirmationForm = () => {
       return () => clearTimeout(timeout);
     }
   }, [showError]);
+
+  useEffect(() => {
+    if (otpValues.every(val => val !== "" && !isNaN(val))) {
+      handleSubmit();
+    }
+  }, [otpValues]);
 
   const handleInputChange = (index, value) => {
     if (!isNaN(value) && value !== "") {
@@ -78,7 +86,7 @@ const OTPConfirmationForm = () => {
     }
   };
 
-  const handleFocus = (index) => {
+  const handleFocus = index => {
     setFocusedIndex(index);
   };
 
@@ -86,10 +94,8 @@ const OTPConfirmationForm = () => {
     setFocusedIndex(-1);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (otpValues.every((val) => val !== "" && !isNaN(val))) {
+  const handleSubmit = async () => {
+    if (otpValues.every(val => val !== "" && !isNaN(val))) {
       const validCode = data.auth;
       validCode.code = otpValues.join("");
 
@@ -111,18 +117,18 @@ const OTPConfirmationForm = () => {
     }
   };
 
-  const handleSendMail = async (event) => {
-    event.preventDefault();
+  const handleSendMail = async () => {
     try {
       const res = await postEmail(data.auth);
       if (res.status === 200) {
         setAnnouncement("Sending email success");
-        setShowSubmitButton(true);
+//setShowSubmitButton(true);
       }
     } catch (error) {
       setAnnouncement("Sending email failed");
     }
   };
+
   useEffect(() => {
     if (!data.auth?.email) {
       navigation.navigate("SignUp");
@@ -133,7 +139,6 @@ const OTPConfirmationForm = () => {
     <View style={styles.container}>
       {!isCorrectOTP ? (
         <>
-          {/* <View style={styles.announcement}>{announcement}</View> */}
           <View style={styles.announcement}>
             {announcement ? <Text>{announcement}</Text> : null}
           </View>
@@ -160,13 +165,11 @@ const OTPConfirmationForm = () => {
                     focusedIndex === index && styles.focused,
                   ]}
                   value={value}
-                  onChange={(event) =>
-                    handleInputChange(index, event.target.value)
-                  }
-                  onKeyPress={(event) => handleBackspace(event, index)}
+                  onChangeText={text => handleInputChange(index, text)}
+                  onKeyPress={event => handleBackspace(event, index)}
                   onFocus={() => handleFocus(index)}
                   onBlur={handleBlur}
-                  ref={(input) => (inputRefs.current[index] = input)}
+                  ref={input => (inputRefs.current[index] = input)}
                   keyboardType="numeric"
                   maxLength={1}
                 />
@@ -179,14 +182,16 @@ const OTPConfirmationForm = () => {
               >
                 <Text style={styles.buttonText}>Send Code</Text>
               </TouchableOpacity>
-              {showSubmitButton && (
-                <TouchableOpacity
-                  style={styles.submitButton}
-                  onPress={handleSubmit}
-                >
-                  <Text style={styles.buttonText}>Submit</Text>
-                </TouchableOpacity>
-              )}
+              <View style={styles.buttonWrapper}>
+                {showSubmitButton && (
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleSubmit}
+                  >
+                    <Text style={styles.buttonText}>Submit</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
           {showError && (
@@ -207,11 +212,13 @@ const OTPConfirmationForm = () => {
   );
 };
 
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "silver",
   },
   announcement: {
     position: "absolute",
@@ -243,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   form: {
-    width: "80%",
+    width: width * 0.8,
   },
   otpInputs: {
     flexDirection: "row",
@@ -261,28 +268,28 @@ const styles = StyleSheet.create({
   focused: {
     borderColor: "blue",
   },
-  buttonWrapper: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
+  // buttonWrapper: {
+  //   flexDirection: "row",
+  //   justifyContent: "center",
+  // },
   sendCodeButton: {
     marginTop: 20,
     padding: 10,
     borderRadius: 5,
     backgroundColor: "transparent",
-    color: "blue",
+    color: "black",
     borderWidth: 0,
     textDecorationLine: "underline",
     alignSelf: "center",
   },
-  submitButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: "green",
-    borderRadius: 5,
-  },
+  // submitButton: {
+  //   paddingVertical: 10,
+  //   paddingHorizontal: 20,
+  //   backgroundColor: "green",
+  //   borderRadius: 5,
+  // },
   buttonText: {
-    color: "white",
+    color: "black",
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
@@ -309,7 +316,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
-
 });
 
 export default OTPConfirmationForm;

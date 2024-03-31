@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Dimensions } from 'react-native';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 
 const ForgotPasswordScreen = ({ navigation }) => {
@@ -7,7 +8,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [step, setStep] = useState(1); 
-
   const handleSendVerificationCode = () => {
     
    
@@ -64,7 +64,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     </View>
   );
 };
-
+const {width, height} = Dimensions.get('window')
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
-    width: '100',
+    width: width* 0.8,
   
 
   },

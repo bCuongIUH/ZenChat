@@ -7,7 +7,7 @@ import {
   Pressable,
   Image,
   TouchableOpacity,
-  Dimensions
+  Dimensions,
 } from "react-native";
 import React, { useContext, useState } from "react";
 import {
@@ -45,7 +45,7 @@ const ItemSetting = () => {
   };
 
   return (
-    <ScrollView style={{flex:1}}>
+    <ScrollView style={{ flex: 1 }}>
       <ImageBackground
         style={styles.imageBackground}
         source={{ uri: user.avatar }}
@@ -70,10 +70,7 @@ const ItemSetting = () => {
         <View style={styles.innerContainer}>
           {/* center các button trong setting */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handlePress}
-            >
+            <TouchableOpacity style={styles.button} onPress={handlePress}>
               <View style={styles.buttonContent}>
                 <MaterialCommunityIcons
                   name="security"
@@ -83,9 +80,7 @@ const ItemSetting = () => {
                 <Text style={styles.buttonText}>Tài khoản và bảo mật</Text>
 
                 {/* điều chỉnh style ở đây bọc icons right trong 1 view rồi flex - end icons sang bên phải */}
-                <View
-                  style={{ flex: 1,  alignItems: "flex-end" }}
-                >
+                <View style={{ flex: 1, alignItems: "flex-end" }}>
                   <AntDesign name="right" size={18} color="black" />
                 </View>
               </View>
@@ -93,10 +88,7 @@ const ItemSetting = () => {
           </View>
           {/* ------------ */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handlePress}
-            >
+            <TouchableOpacity style={styles.button} onPress={handlePress}>
               <View style={styles.buttonContent}>
                 <Ionicons
                   name="lock-closed-outline"
@@ -104,19 +96,15 @@ const ItemSetting = () => {
                   color="#ff8c00"
                 />
                 <Text style={styles.buttonText}>Quyền riêng tư</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View style={{ flex: 1, alignItems: "flex-end" }}>
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
             </TouchableOpacity>
           </View>
           {/* -----gạch ngang chia layout ------------ */}
           <View style={styles.divider}></View>
-          {/* ----------------------------------------- */}
-          {/* -----Dung lượng và dữ liệu------- */}
 
-          {/* -----gạch ngang chia layout ------------ */}
-          {/* ----------------------------------------- */}
-          {/* ------------------------------------------------------------------------- */}
-          {/* ---tin nhắn---- */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.button}
@@ -125,21 +113,25 @@ const ItemSetting = () => {
               <View style={styles.buttonContent}>
                 <MaterialIcons name="message" size={30} color="#ff8c00" />
                 <Text style={styles.buttonText}>Tin nhắn</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View style={{ flex: 1, alignItems: "flex-end" }}>
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
             </TouchableOpacity>
           </View>
           {/* ---------------------cuộc gọi------------------------ */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handlePress}
-            >
+            <TouchableOpacity style={styles.button} onPress={handlePress}>
               <View style={styles.buttonContent}>
                 <MaterialIcons name="call" size={30} color="#ff8c00" />
                 <Text style={styles.buttonText}>Cuộc gọi</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View
+                  style={{ flex: 1,  alignItems: "flex-end" }}
+                >
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
+              
             </TouchableOpacity>
           </View>
           {/* ------------------danh bạ------------------------ */}
@@ -151,8 +143,13 @@ const ItemSetting = () => {
               <View style={styles.buttonContent}>
                 <AntDesign name="contacts" size={30} color="#ff8c00" />
                 <Text style={styles.buttonText}>Danh bạ</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View
+                  style={{ flex: 1,  alignItems: "flex-end" }}
+                >
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
+              
             </TouchableOpacity>
           </View>
           {/* ----------------------------------nhật ký---------------------- */}
@@ -164,8 +161,13 @@ const ItemSetting = () => {
               <View style={styles.buttonContent}>
                 <MaterialIcons name="access-time" size={30} color="#ff8c00" />
                 <Text style={styles.buttonText}>Nhật ký</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View
+                  style={{ flex: 1,  alignItems: "flex-end" }}
+                >
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
+            
             </TouchableOpacity>
           </View>
           {/* -----gạch ngang chia layout ------------ */}
@@ -174,23 +176,22 @@ const ItemSetting = () => {
           {/* -----------------------------giao diện và ngôn ngữ------------------- */}
           {/* -------làm thêm phần update chuyển ngôn ngữ và đổi màu giao diện */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handlePress}
-            >
+            <TouchableOpacity style={styles.button} onPress={handlePress}>
               <View style={styles.buttonContent}>
                 <FontAwesome name="language" size={30} color="#ff8c00" />
                 <Text style={styles.buttonText}>Giao diện và ngôn ngữ</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View
+                  style={{ flex: 1,  alignItems: "flex-end" }}
+                >
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
+             
             </TouchableOpacity>
           </View>
           {/* ------------------------------------------------------ */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handlePress}
-            >
+            <TouchableOpacity style={styles.button} onPress={handlePress}>
               <View style={styles.buttonContent}>
                 <Ionicons
                   name="information-circle-outline"
@@ -198,8 +199,13 @@ const ItemSetting = () => {
                   color="#ff8c00"
                 />
                 <Text style={styles.buttonText}>Thông tin về ZenChat</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View
+                  style={{ flex: 1,  alignItems: "flex-end" }}
+                >
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
+
             </TouchableOpacity>
           </View>
           {/* -------------------------------------- */}
@@ -207,23 +213,26 @@ const ItemSetting = () => {
           <View style={styles.divider}></View>
           {/* ----------------chuyển tài khoản------------------------- */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handlePress}
-            >
+            <TouchableOpacity style={styles.button} onPress={handlePress}>
               <View style={styles.buttonContent}>
-                <MaterialIcons name="manage-accounts" size={30} color="#ff8c00" />
+                <MaterialIcons
+                  name="manage-accounts"
+                  size={30}
+                  color="#ff8c00"
+                />
                 <Text style={styles.buttonText}>Chuyển tài khoản</Text>
-                <AntDesign name="right" size={18} color="black" />
+                <View
+                  style={{ flex: 1,  alignItems: "flex-end" }}
+                >
+                  <AntDesign name="right" size={18} color="black" />
+                </View>
               </View>
+
             </TouchableOpacity>
           </View>
           {/* -------------------------button đăng xuất------------------------- */}
           <View style={styles.logoutContainer}>
-            <Pressable
-              onPress={handleSignOut}
-              style={styles.logoutButton}
-            >
+            <Pressable onPress={handleSignOut} style={styles.logoutButton}>
               <Ionicons name="log-out-outline" size={24} color="black" />
               <Text style={styles.logoutText}>Đăng xuất</Text>
             </Pressable>
@@ -234,10 +243,11 @@ const ItemSetting = () => {
   );
 };
 
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   imageBackground: {
-    width: 500,
-    height: 200,
+    width: width,
+    height: height * 0.3,
   },
   header: {
     flexDirection: "row",
@@ -267,7 +277,8 @@ const styles = StyleSheet.create({
   button: {
     marginRight: 10,
     marginTop: 20,
-    width: "100%",
+    //width: "100%",
+    width: width * 1,
     height: 40,
   },
   buttonContent: {
@@ -281,16 +292,17 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 20,
-    fontWeight: "400",
+    fontWeight: "normal",
   },
   divider: {
     borderWidth: 3,
     borderColor: "silver",
-    width: 420,
+    width: width,
     marginTop: 10,
   },
   logoutContainer: {
-    width: "100%",
+    //width: "100%",
+    width: width * 1,
     alignItems: "center",
     justifyContent: "center",
   },
