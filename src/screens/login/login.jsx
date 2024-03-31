@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getCookieExist, postLogin } from "../../untills/api";
-
+import { Dimensions } from 'react-native';
 const Login = () => {
   const thongbao = useRef(null);
   const [username, setEmail] = useState("");
@@ -16,6 +16,11 @@ const Login = () => {
   const navigation = useNavigation();
   const [showError, setShowError] = useState(false);
 
+  // này quy đổi css từ web sang react tránh xung đột vd : width : width *0.2, => 20% , còn 20px = 20
+  const windowDimensions = Dimensions.get('window');
+  const width = windowDimensions.width;
+  const height = windowDimensions.height;
+  
   useEffect(() => {
     getCookieExist()
       .then((data) => {
@@ -143,7 +148,7 @@ const styles = StyleSheet.create({
     width: "70%",
     margin: 4,
     fontStyle: "italic",
-    fontWeight: "700",
+    fontWeight: "bold",
     fontSize: 11,
     color: "gray",
   },
@@ -154,7 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     //outlineStyle: "none",
     borderWidth: 0,  // Đặt độ dày đường viền là 0 để ẩn nó đi
-    fontWeight: "500",
+    fontWeight: "normal",
   },
   forgot: {
     color: "#ff8c00",
@@ -173,7 +178,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: "white",
-    fontWeight: "500",
+    fontWeight: "normal",
   },
   thongbao: {
     borderWidth: 3,

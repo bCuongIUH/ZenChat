@@ -18,7 +18,7 @@ const ItemSecurity = () => {
   const { user } = useContext(AuthContext);
 
   const handlePress = () => {
-    navigation.navigate("itemSecurity");
+    navigation.navigate("ItemSecurity");
   };
 
   return (
@@ -40,7 +40,7 @@ const ItemSecurity = () => {
         {/* Thông tin cá nhân */}
         <TouchableOpacity
           style={styles.infoContainer}
-          onPress={() => navigation.navigate("itemUpdateUser")}
+          onPress={() => navigation.navigate("ItemUpdateUser")}
         >
           <View style={styles.imageContainer}>
             <Image source={{ uri: user.avatar }} style={styles.image} />

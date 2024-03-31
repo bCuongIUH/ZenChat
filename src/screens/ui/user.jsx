@@ -60,7 +60,7 @@ const User = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => nav.navigate("itemSetting")}
+            onPress={() => nav.navigate("ItemSetting")}
             style={styles.addFriendButton}
           >
             <AntDesign name="setting" size={24} color="black" />
@@ -73,7 +73,7 @@ const User = () => {
         <View style={styles.avatarContainer}>
           <Image style={styles.avatar} source={{ uri: user.avatar }} />
           <TouchableOpacity
-            onPress={() => nav.navigate("itemInfo")}
+            onPress={() => nav.navigate("ItemInfo")}
             style={styles.option}
           >
             <Text style={styles.optiontext}>Thông Tin Cá Nhân</Text>

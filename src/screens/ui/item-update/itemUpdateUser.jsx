@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingLeft: 10,
-    width: "50px",
+    width: 50,
     justifyContent: "flex-end",
   },
 

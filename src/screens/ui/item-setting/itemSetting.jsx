@@ -40,7 +40,7 @@ const ItemSetting = () => {
   };
   const handlePress = () => {
     // Xử lý sự kiện khi button được nhấn
-    navigation.navigate("itemSecurity");
+    navigation.navigate("ItemSecurity");
   };
 
   return (
