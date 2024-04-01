@@ -24,9 +24,8 @@ export const Friend = () => {
   const [isActionModalVisible, setActionModalVisible] = useState(false);
   const [todoList, setTodoList] = useState([]);
   const [filteredTodoList, setFilteredTodoList] = useState([]);
-
   const [searchStarted, setSearchStarted] = useState(false);
-
+ 
   const handleSearchIconPress = () => {
     setSearchStarted(false);
     setIsSearching(!isSearching);
@@ -38,7 +37,7 @@ export const Friend = () => {
 
   const handleCreateChatPress = () => {
     setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
-    nav.navigate("itemAddFriend");
+    nav.navigate("ItemAddFriend");
   };
 
   const handleModalClose = () => {
@@ -49,6 +48,7 @@ export const Friend = () => {
     setIsSearching(false);
   };
 
+// ---------------------------
   useEffect(() => {
     setTodoList([
       {

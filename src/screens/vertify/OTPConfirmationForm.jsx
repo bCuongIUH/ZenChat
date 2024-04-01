@@ -104,7 +104,13 @@ const OTPConfirmationForm = () => {
     if (otpValues.every(val => val !== "" && !isNaN(val))) {
       const validCode = data.auth;
       validCode.code = otpValues.join("");
-
+      // mai test lại đoạn này--------------------------------------------
+      const timeoutPromise = new Promise((resolve, reject) => {
+        // Thiết lập timeout cho 3 giây
+        setTimeout(() => {
+          reject(new Error('Timeout occurred'));
+        }, 3000);
+      });
       try {
         const res = await postValidRegister(validCode);
         if (res.status === 200) {
@@ -203,7 +209,7 @@ const OTPConfirmationForm = () => {
           {showError && (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>
-                Please enter the full and valid OTP codes
+                Mã OTP sai! Vui lòng nhập lại.
               </Text>
             </View>
           )}
