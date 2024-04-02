@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import verifiedImage from "./verified.gif"; // Import image
@@ -25,11 +26,8 @@ const OTPConfirmationForm = () => {
   const [announcement, setAnnouncement] = useState("");
   const navigation = useNavigation();
 
-
-// 4/1 hoàn thành chức năng tự động submit khi kiểm tra otpValues every ko rổng k NaN thì thực hiện handsubmit.....
-//  màn hình này có thể code thêm 1 chức năng timeout nút sendcode (60s)
-
-
+  // 4/1 hoàn thành chức năng tự động submit khi kiểm tra otpValues every ko rổng k NaN thì thực hiện handsubmit.....
+  //  màn hình này có thể code thêm 1 chức năng timeout nút sendcode (60s)
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -59,7 +57,7 @@ const OTPConfirmationForm = () => {
   }, [showError]);
 
   useEffect(() => {
-    if (otpValues.every(val => val !== "" && !isNaN(val))) {
+    if (otpValues.every((val) => val !== "" && !isNaN(val))) {
       handleSubmit();
     }
   }, [otpValues]);
@@ -92,7 +90,7 @@ const OTPConfirmationForm = () => {
     }
   };
 
-  const handleFocus = index => {
+  const handleFocus = (index) => {
     setFocusedIndex(index);
   };
 
@@ -101,14 +99,14 @@ const OTPConfirmationForm = () => {
   };
 
   const handleSubmit = async () => {
-    if (otpValues.every(val => val !== "" && !isNaN(val))) {
+    if (otpValues.every((val) => val !== "" && !isNaN(val))) {
       const validCode = data.auth;
       validCode.code = otpValues.join("");
       // mai test lại đoạn này--------------------------------------------
       const timeoutPromise = new Promise((resolve, reject) => {
         // Thiết lập timeout cho 3 giây
         setTimeout(() => {
-          reject(new Error('Timeout occurred'));
+          reject(new Error("Timeout occurred"));
         }, 3000);
       });
       try {
@@ -116,7 +114,11 @@ const OTPConfirmationForm = () => {
         if (res.status === 200) {
           removeCookie();
           setShowError(false);
-          navigation.navigate("Login");
+          setIsCorrectOTP(true);
+          //navigation.navigate("Login");
+          setTimeout(() => {
+            navigation.navigate("Login");
+          }, 3000); 
         } else {
           navigation.navigate("Signup");
         }
@@ -134,7 +136,7 @@ const OTPConfirmationForm = () => {
       const res = await postEmail(data.auth);
       if (res.status === 200) {
         setAnnouncement("Sending email success");
-//setShowSubmitButton(true); // đóng thẻ k hien submit
+        setShowSubmitButton(true); // đóng thẻ k hien submit
       }
     } catch (error) {
       setAnnouncement("Sending email failed");
@@ -160,9 +162,9 @@ const OTPConfirmationForm = () => {
           <View style={styles.thongbaoEr}>
             <Text style={styles.thongbaoErText}>Code is incorrect</Text>
           </View>
-          <Text style={styles.heading}>Verify Account</Text>
+          <Text style={styles.heading}>Nhập mã xác minh</Text>
           <Text style={styles.message}>
-            Vui lòng nhập mã xác minh 6 số được gửi tới địa chỉ email{" "}
+            Vui lòng nhập mã xác minh 6 số được gửi tới địa chỉ email:{" "}
             <View style={styles.centeredTextContainer}>
               <Text style={styles.centeredText}>{data.auth?.email}</Text>
             </View>
@@ -177,11 +179,11 @@ const OTPConfirmationForm = () => {
                     focusedIndex === index && styles.focused,
                   ]}
                   value={value}
-                  onChangeText={text => handleInputChange(index, text)}
-                  onKeyPress={event => handleBackspace(event, index)}
+                  onChangeText={(text) => handleInputChange(index, text)}
+                  onKeyPress={(event) => handleBackspace(event, index)}
                   onFocus={() => handleFocus(index)}
                   onBlur={handleBlur}
-                  ref={input => (inputRefs.current[index] = input)}
+                  ref={(input) => (inputRefs.current[index] = input)}
                   keyboardType="numeric"
                   maxLength={1}
                 />
@@ -216,7 +218,7 @@ const OTPConfirmationForm = () => {
         </>
       ) : (
         <View style={styles.success}>
-          <Text>Verification Successful</Text>
+          <Text>Đăng ký thành công</Text>
           <Image source={verifiedImage} style={{ width: 100, height: 100 }} />
         </View>
       )}
