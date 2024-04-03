@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
     outlineStyle: 0,
     borderWidth: 0,
     fontWeight: "bold",
+    
   },
   forgot: {
     color: "#ff8c00",
@@ -166,8 +167,8 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginTop: 5,
-    position: "absolute", // Đặt vị trí của phần tử con là absolute
-    bottom: 0, // Hiển thị dưới phần tử cha
+    position: "absolute", 
+    bottom: 0, 
   },
 });
 

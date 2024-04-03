@@ -144,7 +144,7 @@ export const SignUp = () => {
       background,
     };
     try {
-      await postRegister(data)
+      await postRegister(data) // gọi đến api để ktra dữ liệu
         .then((res) => {
           console.log(res.data.token);
           AsyncStorage.setItem("token", res.data.token);
@@ -154,7 +154,7 @@ export const SignUp = () => {
 
         .catch((err) => {
           if (AxiosError.ERR_BAD_REQUEST) {
-            setErrForm(err.response.data.message);
+            setErrForm(err.response.data.message); 
             clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => {
               setErrForm("");

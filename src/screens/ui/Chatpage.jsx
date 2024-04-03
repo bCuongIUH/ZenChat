@@ -34,13 +34,16 @@ export const Chatpage = () => {
 
   const handleAddFriendPress = () => {
     setActionModalVisible(true);
+    
   };
 
   const handleCreateChatPress = () => {
     setActionModalVisible(false);
+    nav.navigate("ItemAddFriend")
   };
 
   const handleModalClose = () => {
+    
     setActionModalVisible(false);
   };
 

@@ -1,28 +1,24 @@
 import React, { createContext, useContext, useState } from 'react';
-import { findAuth } from '../untills/api';
+import { findAuth } from '../../../untills/api';
 // Creating a context
 const UserContext = createContext();
 
 export const useUser = () => useContext(UserContext);
 
-// Creating a provider
 export const UserProvider = ({ children }) => {
   const [userFound, setUserFound] = useState([]);
+
   const handleFindUser = async (phoneNumber) => {
     const data = { phoneNumber };
     try {
       const res = await findAuth(data);
       if (!res.data) {
-        // alert("Không tìm thấy người dùng");
-        console.log("không tìm thấy người dùng");
+        alert("Không tìm thấy người dùng");
       } else {
-        // setUserFound(res.data);
         return res.data;
       }
     } catch (err) {
-      // alert("Lỗi Server");
-      console.log("lỗi Server");
-
+      alert("Lỗi Server");
     }
   };
 

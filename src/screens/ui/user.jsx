@@ -101,7 +101,7 @@ export const User = () => {
           style={styles.tabBarButton}
           onPress={() => nav.navigate("Chatpage")}
         >
-          <AntDesign name="message1" size={35} color="#black" />
+          <AntDesign name="message1" size={35} color="black" />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -125,7 +125,7 @@ export const User = () => {
           <FontAwesome
             name="user"
             size={35}
-            color="ff8c00"
+            color="#ff8c00"
           />
         </TouchableOpacity>
       </View>

@@ -22,7 +22,7 @@ import {
 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../../untills/context/AuthContext";
-import { logoutUser, removeCookie } from "../../../untills/api";
+import { logoutUser, removeCookie, deleteAccount } from "../../../untills/api";
 
 const ItemSetting = () => {
   const navigation = useNavigation();
@@ -43,7 +43,26 @@ const ItemSetting = () => {
     // Xử lý sự kiện khi button được nhấn
     navigation.navigate("ItemSecurity");
   };
-
+  const handlePressPassword=()=>{
+    navigation.navigate("ItemUpdatePassword")
+  }
+  //xóa acc 
+  const handledeleaccount = () => {
+        
+    deleteAccount(user._id)
+    .then((res) => {
+        if(res.data === true){
+            alert("Xóa thành account")
+            window.location.href = '/login';   
+        } else {
+            alert("Xóa account không thành công")
+        }
+    })
+    .catch((err) => {
+        alert("Lỗi Server")
+    })
+    // navigate('/page');
+}
   return (
     <ScrollView style={{ flex: 1 }}>
       <ImageBackground
@@ -88,7 +107,7 @@ const ItemSetting = () => {
           </View>
           {/* ------------ */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={handlePress}>
+            <TouchableOpacity style={styles.button} onPress={handlePressPassword}>
               <View style={styles.buttonContent}>
                 <Ionicons
                   name="lock-closed-outline"
@@ -213,14 +232,14 @@ const ItemSetting = () => {
           <View style={styles.divider}></View>
           {/* ----------------chuyển tài khoản------------------------- */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={handlePress}>
+            <TouchableOpacity style={styles.button} onPress={handledeleaccount}>
               <View style={styles.buttonContent}>
                 <MaterialIcons
                   name="manage-accounts"
                   size={30}
                   color="#ff8c00"
                 />
-                <Text style={styles.buttonText}>Chuyển tài khoản</Text>
+                <Text style={styles.buttonText}>Xóa tài khoản</Text>
                 <View
                   style={{ flex: 1,  alignItems: "flex-end" }}
                 >

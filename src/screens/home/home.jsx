@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
@@ -14,21 +20,21 @@ const HomeScreen = () => {
   };
 
   return (
-    <ImageBackground 
-    source={require("./image.png")}
+    <ImageBackground
+      source={require("./image.png")}
       style={styles.background}
       resizeMode="cover"
     >
       <View style={styles.container}>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={handleSignIn} style={styles.buttonSignIn}>
-          <Text style={styles.buttonText}>Sign in</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSignUp} style={styles.buttonSignUp}>
-          <Text style={styles.buttonText}>Sign up</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity onPress={handleSignIn} style={styles.buttonSignIn}>
+            <Text style={styles.buttonText}>Sign in</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleSignUp} style={styles.buttonSignUp}>
+            <Text style={styles.buttonText}>Sign up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
     </ImageBackground>
   );
 };
@@ -36,9 +42,10 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: "cover",
     justifyContent: "center",
     alignItems: "center",
+    width: "100%", 
+    height: "100%",
   },
   container: {
     flex: 1,
@@ -47,33 +54,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonContainer: {
-    flexDirection: 'column', 
-    justifyContent: 'flex-end', 
+    flexDirection: "column",
+    justifyContent: "flex-end",
     marginBottom: 10,
   },
   buttonSignIn: {
-     padding: 10,
+    padding: 10,
     marginHorizontal: 10,
-    width : 300,
-    backgroundColor :"orange",
+    width: 300,
+    backgroundColor: "orange",
     borderRadius: 15,
-    alignItems: 'center',
-    
+    alignItems: "center",
   },
   buttonSignUp: {
     padding: 10,
     marginHorizontal: 10,
     borderRadius: 5,
     backgroundColor: "transparent",
-    alignItems: 'center',
-    backgroundColor :"silver",
+    alignItems: "center",
+    backgroundColor: "silver",
     borderRadius: 15,
-    marginTop :5  
+    marginTop: 5,
   },
   buttonText: {
     color: "white",
     fontSize: 16,
-    textDecorationLine: 'underline' 
+    textDecorationLine: "underline",
   },
 });
 

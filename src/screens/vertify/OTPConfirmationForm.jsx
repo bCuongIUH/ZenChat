@@ -13,6 +13,7 @@ import verifiedImage from "./verified.gif"; // Import image
 import { Auth } from "../../untills/context/SignupContext";
 import { postEmail, postValidRegister, removeCookie } from "../../untills/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AntDesign } from "@expo/vector-icons";
 
 const OTPConfirmationForm = () => {
   const [isCorrectOTP, setIsCorrectOTP] = useState(false);
@@ -26,7 +27,7 @@ const OTPConfirmationForm = () => {
   const [announcement, setAnnouncement] = useState("");
   const navigation = useNavigation();
 
-  // 4/1 hoàn thành chức năng tự động submit khi kiểm tra otpValues every ko rổng k NaN thì thực hiện handsubmit.....
+  // 4/1 hoàn thành chức năng tự động submit khi kiểm tra otpValues every ko rổng k NaN thì thực hiện handsubmit..... 
   //  màn hình này có thể code thêm 1 chức năng timeout nút sendcode (60s)
 
   useEffect(() => {
@@ -56,12 +57,17 @@ const OTPConfirmationForm = () => {
     }
   }, [showError]);
 
+
+  /// cái này là tự động gọi hàm submit khi nhập đủ 6 số k rổng và ko giá trị NaN thì nó tự động ra 
+  // làm thêm phần chờ 3s ở handleSubmit để lúc nhập đúng nó chờ show thông báo dăng kí thành công
   useEffect(() => {
     if (otpValues.every((val) => val !== "" && !isNaN(val))) {
       handleSubmit();
     }
   }, [otpValues]);
 
+
+  
   const handleInputChange = (index, value) => {
     if (!isNaN(value) && value !== "") {
       const newOTPValues = [...otpValues];
@@ -136,7 +142,7 @@ const OTPConfirmationForm = () => {
       const res = await postEmail(data.auth);
       if (res.status === 200) {
         setAnnouncement("Sending email success");
-        setShowSubmitButton(true); // đóng thẻ k hien submit
+        //setShowSubmitButton(true); // đóng thẻ k hien submit
       }
     } catch (error) {
       setAnnouncement("Sending email failed");
@@ -150,7 +156,14 @@ const OTPConfirmationForm = () => {
   }, [data.auth?.email, navigation]);
 
   return (
+    
     <View style={styles.container}>
+     <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <AntDesign name="arrowleft" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>SignUp</Text>
+      </View>
       {!isCorrectOTP ? (
         <>
           <View style={styles.announcement}>
@@ -235,6 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: "silver",
   },
   announcement: {
+    justifyContent :"center",
     position: "absolute",
     top: -120,
   },
@@ -329,6 +343,22 @@ const styles = StyleSheet.create({
   centeredText: {
     fontSize: 16,
     textAlign: "center",
+  },
+  header: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#ff8c00",
+  paddingVertical: 20,
+  paddingHorizontal: 10, 
+  position: "absolute", 
+  top: 0, 
+  left: 0, 
+  right: 0, 
+  },
+  headerText: {
+    fontSize: 20,
+    color: "black",
+    marginLeft: 5,
   },
 });
 

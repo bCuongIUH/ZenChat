@@ -19,11 +19,12 @@ import Friend from "./src/screens/ui/friend";
 import User from "./src/screens/ui/user";
 import ItemInfo from "./src/screens/ui/item-info-user/itemInfo";
 import ItemSetting from "./src/screens/ui/item-setting/itemSetting";
-// import { SocketContext, socket } from "./src/untills/context/SocketContext";
+import { SocketContext, socket } from "./src/untills/context/SocketContext";
 import ItemSecurity from "./src/screens/ui/item-setting-security/itemSecurity";
 import ItemUpdateUser from "./src/screens/ui/item-update/itemUpdateUser";
 import ItemAddFriend from "./src/screens/ui/item-Friend/itemAddFriend";
-import { UserProvider } from "./src/component/findUser";
+import { UserProvider } from "./src/screens/ui/component/findUser";
+import ItemUpdatePassword from "./src/screens/ui/item-update-password/itemUpdatePassword";
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -34,7 +35,7 @@ function App() {
       <NavigationContainer>
         <AuthContext.Provider value={{ user, updateAuthUser: setUser }}>
           <SignupContext>
-            {/* <SocketContext.Provider value={socket}> */}
+            <SocketContext.Provider value={socket}>
             {/* <NavigationContainer> */}
             <Stack.Navigator
               initialRouteName="Home"
@@ -51,7 +52,9 @@ function App() {
               <Stack.Screen name="Chatpage">
                 {() => (
                   <RequireAuth>
-                    <Chatpage />
+                    <UserProvider>
+                      <Chatpage />
+                    </UserProvider>
                   </RequireAuth>
                 )}
               </Stack.Screen>
@@ -61,24 +64,27 @@ function App() {
               />
               <Stack.Screen name="Time" component={Time} />
 
-              <Stack.Screen name="Friend">
-                {() => (
-                  <RequireAuth>
-                    <UserProvider>
-                      <Friend />
-                    </UserProvider>
-                  </RequireAuth>
-                )}
-              </Stack.Screen>
+              <Stack.Screen name="Friend" component={Friend} />
 
               <Stack.Screen name="User" component={User} />
               <Stack.Screen name="ItemInfo" component={ItemInfo} />
               <Stack.Screen name="ItemSetting" component={ItemSetting} />
               <Stack.Screen name="ItemSecurity" component={ItemSecurity} />
               <Stack.Screen name="ItemUpdateUser" component={ItemUpdateUser} />
+
               <Stack.Screen name="ItemAddFriend" component={ItemAddFriend} />
+              <Stack.Screen name="ItemUpdatePassword" component={ItemUpdatePassword} />
+              {/* <Stack.Screen name="ItemAddFriend">
+                {() => (
+                  <RequireAuth>
+                    <UserProvider>
+                      <ItemAddFriend />
+                    </UserProvider>
+                  </RequireAuth>
+                )}
+              </Stack.Screen> */}
             </Stack.Navigator>
-            {/* </SocketContext.Provider> */}
+            </SocketContext.Provider>
           </SignupContext>
         </AuthContext.Provider>
       </NavigationContainer>
