@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { getListRooms } from "../../untills/api";
 import { AuthContext } from "../../untills/context/AuthContext";
+import { SocketContext } from "../../untills/context/SocketContext";
 
 export const Chatpage = ({ route }) => {
   const { user } = useContext(AuthContext);
@@ -33,7 +34,7 @@ export const Chatpage = ({ route }) => {
 
   const [addedUsers, setAddedUsers] = useState([]);
   const [rooms, setRooms] = useState([]);
-
+  const socket = useContext(SocketContext);
   const handleSearchIconPress = () => {
     setSearchStarted(false);
     setIsSearching(!isSearching);
@@ -93,6 +94,62 @@ export const Chatpage = ({ route }) => {
       }
     }
   }, [searchStarted, searchText, todoList]);
+  useEffect(() => {
+    socket.on('connected', () => console.log('Connected'));
+    socket.on(user.email, roomSocket => {
+        setRooms(prevRooms => [...prevRooms, roomSocket]);
+
+    })
+    socket.on(user.email, roomSocket => {
+        updateListRooms(roomSocket.rooms)
+    });
+
+    
+   
+    return () => {
+        socket.off('connected');
+        socket.off(user.email);
+        socket.off(user.email)
+        
+    }
+}, [])
+useEffect(() => {
+    socket.on(`updateLastMessages${user.email}`,lastMessageUpdate => {
+        setRooms(prevRooms => {
+            // Cập nhật phòng đã được cập nhật
+            return prevRooms.map(room => {
+                if (room === undefined || lastMessageUpdate === undefined) {
+                    return room;
+                }
+                if (room._id === lastMessageUpdate._id) {
+                    
+                    return lastMessageUpdate;
+                }
+                return room;
+            });
+        });
+        
+    })
+    socket.on(`updateLastMessagesed${user.email}`, lastMessageUpdate => {
+        setRooms(prevRooms => {
+            // Cập nhật phòng đã được cập nhật
+            return prevRooms.map(room => {
+                if (room === undefined || lastMessageUpdate === undefined) {
+                    return room;
+                }
+                if (room._id === lastMessageUpdate._id) {
+                    
+                    return lastMessageUpdate;
+                }
+                return room;
+            });
+        });
+    })
+    return () => { 
+        socket.off(`updateLastMessages${user.email}`)
+        socket.off(`updateLastMessagesed${user.email}`)
+    }
+}, [])
 
   return (
     <SafeAreaView style={styles.container}>
