@@ -8,21 +8,31 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { getRoomsMessages, createMessage } from "../../../untills/api";
+import {
+  getRoomsMessages,
+  createMessage,
+  deleteMessages,
+  updateMessage,
+} from "../../../untills/api";
 import { SocketContext } from "../../../untills/context/SocketContext";
 import { Ionicons, FontAwesome, Entypo, AntDesign } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import { AuthContext } from "../../../untills/context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
-export const Message = ({ id, navigation }) => {
+export const Message = ({ route }) => {
+  const { id, nameRoom, avatar,updateLastMessage } = route.params;
   const [messages, setMessages] = useState([]);
   const socket = useContext(SocketContext);
   const [texting, setTexting] = useState("");
   const messRef = useRef();
   const { user } = useContext(AuthContext);
-  const route = useRoute();
-  const selectedRoom = route.params ? route.params.item : {};
+  const nav = useNavigation();
+  const [selectedRoom, setSelectedRoom] = useState(null); // Correct declaration
 
+  // Lấy dữ liệu tên item người dùng render qua dữ liệu mess
+  const selectedRoomData = route.params ? route.params.item : null;
+  console.log("selectedRoomData:", selectedRoomData);
 
   const getDisplayUser = (room) => {
     if (!room || !room.creator) {
@@ -31,22 +41,13 @@ export const Message = ({ id, navigation }) => {
       return room.creator._id === user?._id ? room.recipient : room.creator;
     }
   };
-
   const selectedUser = getDisplayUser(selectedRoom);
+  console.log("selectedUser:", selectedUser);
   useEffect(() => {
-    const RoomMessages = {
-      roomsId: id
-    };
-    getRoomsMessages(RoomMessages)
-      .then((data) => {
-        setMessages(data.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, [id]);
-
-  
+    // Lấy thông tin về phòng của người dùng được chọn từ item người dùng
+    setSelectedRoom(selectedRoomData);
+  }, [selectedRoomData]);
+  ////
   useEffect(() => {
     const RoomMessages = {
       roomsId: id,
@@ -80,23 +81,18 @@ export const Message = ({ id, navigation }) => {
 
   useEffect(() => {
     ScrollbarCuoi();
-  }, [id]);
+  }, [id, updateLastMessage]);
 
-  // const handleSendMess = () => {
-  //   if (texting === "") {
-  //     Alert.alert("Mời bạn nhập tin nhắn");
-  //     return;
-  //   }
+  const handleTexting = (text) => {
+    setTexting(text);
+  };
 
-  //   socket.emit("sendMessage", { content: texting });
-  //   setTexting("");
-  // };
   const handleSendMess = () => {
     if (texting === "") {
-      alert("Mời bạn nhập tin nhắn");
+      Alert.alert("Mời bạn nhập tin nhắn");
       return;
     } else if (!id) {
-      alert("Không tìm thấy Phòng bạn muốn gửi tin nhắn");
+      Alert.alert("Không tìm thấy Phòng bạn muốn gửi tin nhắn");
       return;
     } else {
       const data = {
@@ -105,23 +101,22 @@ export const Message = ({ id, navigation }) => {
       };
       createMessage(data)
         .then((res) => {
-          setTexting("");
-          // console.log(res.data.rooms)
+          setTexting(""); // Xóa nội dung đã nhập sau khi gửi tin nhắn thành công
           socket.emit("sendMessage", { content: texting });
-          setTexting("");
         })
         .catch((err) => {
           console.log(err);
         });
     }
   };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => nav.goBack()}>
           <View style={styles.goBackContainer}>
             <AntDesign name="arrowleft" size={24} color="black" />
-            <Text style={styles.goBackText}>{selectedUser.fullName}</Text>
+            <Text style={styles.goBackText}>{selectedUser ? selectedUser.fullName : ''}</Text>
           </View>
         </TouchableOpacity>
         <View style={styles.headerRight}>
@@ -150,25 +145,16 @@ export const Message = ({ id, navigation }) => {
           style={styles.input}
           placeholder="Tin nhắn..."
           value={texting}
-          onChangeText={setTexting}
+          onChangeText={handleTexting} // Xử lý sự kiện thay đổi TextInput
         />
         <TouchableOpacity style={styles.sendButton} onPress={handleSendMess}>
           <Ionicons name="send" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.attachButton}>
-          <Ionicons name="attach" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.attachButton}>
-          <Ionicons name="image" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.attachButton}>
-          <Ionicons name="document" size={24} color="black" />
-        </TouchableOpacity>
+        {/* Các nút attach khác */}
       </View>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -16,13 +16,13 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
-import { getListRooms } from "../../untills/api";
+import { getListRooms, createRoom } from "../../untills/api"; // Thêm import cho createRoom
 import { AuthContext } from "../../untills/context/AuthContext";
 import { SocketContext } from "../../untills/context/SocketContext";
 
 export const Chatpage = ({ route }) => {
   const { user } = useContext(AuthContext);
-  
+
   const nav = useNavigation();
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -35,6 +35,9 @@ export const Chatpage = ({ route }) => {
   const [addedUsers, setAddedUsers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const socket = useContext(SocketContext);
+  // const roomId =
+  //   route.params && route.params.roomId ? route.params.roomId : null;
+
   const handleSearchIconPress = () => {
     setSearchStarted(false);
     setIsSearching(!isSearching);
@@ -56,8 +59,42 @@ export const Chatpage = ({ route }) => {
   const handleMainScreenPress = () => {
     setIsSearching(false);
   };
+
   const handleTodoItemPress = (item) => {
-    nav.navigate("Message", { item });
+    // Kiểm tra xem phòng chat với người dùng đã tồn tại hay không
+    const existingRoom = rooms.find((room) => {
+      return (
+        (room.creator._id === user._id && room.recipient._id === item._id) ||
+        (room.creator._id === item._id && room.recipient._id === user._id)
+      );
+    });
+
+    if (existingRoom) {
+      // Nếu phòng đã tồn tại, chuyển người dùng đến màn hình chat với phòng đó
+      nav.navigate("Message", {
+        id: existingRoom._id,
+        nameRoom: existingRoom.fullName,
+        avatar: existingRoom.avatar,
+      });
+    } else {
+      // Nếu phòng chưa tồn tại, tạo phòng mới và chuyển người dùng đến màn hình chat với phòng mới
+      const newRoomData = {
+        creator: user._id,
+        recipient: item._id,
+      };
+      createRoom(newRoomData)
+        .then((createdRoom) => {
+          nav.navigate("Message", {
+            id: createdRoom._id,
+            nameRoom: createdRoom.fullName,
+            avatar: createdRoom.avatar,
+          });
+        })
+        .catch((error) => {
+          console.log("Error creating room:", error);
+          // Xử lý lỗi tạo phòng
+        });
+    }
   };
 
   const getDisplayUser = (room) => {
@@ -94,62 +131,57 @@ export const Chatpage = ({ route }) => {
       }
     }
   }, [searchStarted, searchText, todoList]);
-  useEffect(() => {
-    socket.on('connected', () => console.log('Connected'));
-    socket.on(user.email, roomSocket => {
-        setRooms(prevRooms => [...prevRooms, roomSocket]);
 
-    })
-    socket.on(user.email, roomSocket => {
-        updateListRooms(roomSocket.rooms)
+  useEffect(() => {
+    socket.on("connected", () => console.log("Connected"));
+    socket.on(user.email, (roomSocket) => {
+      setRooms((prevRooms) => [...prevRooms, roomSocket]);
+    });
+    socket.on(user.email, (roomSocket) => {
+      updateListRooms(roomSocket.rooms);
     });
 
-    
-   
     return () => {
-        socket.off('connected');
-        socket.off(user.email);
-        socket.off(user.email)
-        
-    }
-}, [])
-useEffect(() => {
-    socket.on(`updateLastMessages${user.email}`,lastMessageUpdate => {
-        setRooms(prevRooms => {
-            // Cập nhật phòng đã được cập nhật
-            return prevRooms.map(room => {
-                if (room === undefined || lastMessageUpdate === undefined) {
-                    return room;
-                }
-                if (room._id === lastMessageUpdate._id) {
-                    
-                    return lastMessageUpdate;
-                }
-                return room;
-            });
+      socket.off("connected");
+      socket.off(user.email);
+      socket.off(user.email);
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on(`updateLastMessages${user.email}`, (lastMessageUpdate) => {
+      setRooms((prevRooms) => {
+        // Cập nhật phòng đã được cập nhật
+        return prevRooms.map((room) => {
+          if (room === undefined || lastMessageUpdate === undefined) {
+            return room;
+          }
+          if (room._id === lastMessageUpdate._id) {
+            return lastMessageUpdate;
+          }
+          return room;
         });
-        
-    })
-    socket.on(`updateLastMessagesed${user.email}`, lastMessageUpdate => {
-        setRooms(prevRooms => {
-            // Cập nhật phòng đã được cập nhật
-            return prevRooms.map(room => {
-                if (room === undefined || lastMessageUpdate === undefined) {
-                    return room;
-                }
-                if (room._id === lastMessageUpdate._id) {
-                    
-                    return lastMessageUpdate;
-                }
-                return room;
-            });
+      });
+    });
+    socket.on(`updateLastMessagesed${user.email}`, (lastMessageUpdate) => {
+      setRooms((prevRooms) => {
+        // Cập nhật phòng đã được cập nhật
+        return prevRooms.map((room) => {
+          if (room === undefined || lastMessageUpdate === undefined) {
+            return room;
+          }
+          if (room._id === lastMessageUpdate._id) {
+            return lastMessageUpdate;
+          }
+          return room;
         });
-    })
-    return () => { 
-        socket.off(`updateLastMessages${user.email}`)
-        socket.off(`updateLastMessagesed${user.email}`)
-    }
-}, [])
+      });
+    });
+    return () => {
+      socket.off(`updateLastMessages${user.email}`);
+      socket.off(`updateLastMessagesed${user.email}`);
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -222,7 +254,7 @@ useEffect(() => {
             return (
               <TouchableOpacity
                 style={styles.itemContainer}
-                onPress={() => handleTodoItemPress(item)}
+                onPress={() => handleTodoItemPress(displayUser)}
               >
                 <Image
                   source={{ uri: displayUser.avatar }}
