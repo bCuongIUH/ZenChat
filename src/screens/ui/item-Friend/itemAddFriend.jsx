@@ -229,14 +229,13 @@ import {
 } from "react-native";
 import { findAuth, createRooms } from "../../../untills/api";
 import { useUser } from "../../ui/component/findUser";
-
+import { useNavigation } from "@react-navigation/native";
+import { FontAwesome, AntDesign } from "@expo/vector-icons";
 const ItemAddFriend = () => {
-  const [avatar, setAvatar] = useState("");
-  const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [authFound, setAuthFound] = useState(null);
   const [isAddClicked, setIsAddClicked] = useState(false);
-
+  const navigation = useNavigation();
   const handleSearchChange = (text) => {
     setPhoneNumber(text);
   };
@@ -246,58 +245,54 @@ const ItemAddFriend = () => {
       const data = { phoneNumber };
       const result = await findAuth(data);
       setAuthFound(result);
-      console.log(authFound);
     } catch (error) {
       console.error("Error finding user:", error);
     }
   };
-  // //   const handleFoundUser = async (e) => {
 
-  // //     const data = phoneNumber;
-
-  // //     const result = await handleFindUser(data); // thay findAuth thành handleFindUser thì load nhanh hơn k cần bọc thẻ UserProvider
-
-  // //     if (result !== undefined) {
-  // //         const obj = [];
-  // //         obj.push(result)
-  // //        setAuthFound(obj);
-  // //        return;
-  // //     }
-
-  // // }
   useEffect(() => {
-    console.log(authFound);
-   
-  }); 
+    console.log(typeof authFound);
+  }, [authFound]);
 
   const handleAddClick = () => {
+    if (!authFound) {
+      console.error("No user found to add");
+      return;
+    }
+
     const message = "hello";
-    const authen = [authFound[0].email];
-    const email = authen[0];
+    const email = authFound.email;
     const data1 = { email, message };
 
     createRooms(data1)
       .then((res) => {
         if (res.data.message === "Đã tạo phòng với User này ròi") {
-          alert("Đã tạo phòng với User này ròi !!!");
+          alert("Đã tạo phòng với User này rồi!!!"); //trc đó có add room
           return;
         }
         if (res.data.status === 400) {
-          alert("Không thể nhắn tin với chính bản thân mình !!!");
+          alert("Không thể nhắn tin với chính bản thân mình!!!"); //
           return;
         } else {
-          // window.location.reload();
-          formRef.current.style.display = "none";
+          // Xử lý sau khi tạo phòng thành công
+          // formRef.current.style.display = "none";
+          navigation.navigate("Chatpage");
         }
       })
       .catch((err) => {
         alert("Lỗi hệ thống");
       });
+     
   };
-
 
   return (
     <View style={styles.container}>
+       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <AntDesign name="arrowleft" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>SignUp</Text>
+      </View>
       <TextInput
         style={styles.input}
         onChangeText={handleSearchChange}
@@ -306,33 +301,33 @@ const ItemAddFriend = () => {
       />
       <Button title="Tìm kiếm" onPress={handleFoundUser} />
 
-      {/* {authFound && */}
-      
-{/* 
-          <View key={auth._id} style={styles.showAdd}>
-            <View style={styles.userInfo}> */}
-              {/* <Image source={{ uri: authFound.avatar }} style={styles.avatar} /> */}
-              {/* <Text style={styles.fullName}>{authFound.fullName}</Text> */}
-              {/* <Text style={styles.phoneNumber}>
-                PhoneNumber: {authFound.data.phoneNumber}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={handleAddClick}>
-              <Text
-                style={[
-                  styles.addButton,
-                  {
-                    backgroundColor: isAddClicked
-                      ? "rgb(204, 82, 30)"
-                      : "rgb(204, 82, 30)",
-                  },
-                ]}
-              >
-                {isAddClicked ? "Undo" : "Add"}
-              </Text>
-            </TouchableOpacity>
-          </View> */}
-      
+
+
+      {authFound && (
+        <View key={authFound._id} style={styles.showAdd}>
+          <View style={styles.userInfo}>
+            <Image source={{ uri: authFound.avatar }} style={styles.avatar} />
+            <Text style={styles.fullName}>{authFound.fullName}</Text>
+            <Text style={styles.phoneNumber}>
+              PhoneNumber: {authFound.phoneNumber}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={handleAddClick}>
+            <Text
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: isAddClicked
+                    ? "rgb(204, 82, 30)"
+                    : "rgb(204, 82, 30)",
+                },
+              ]}
+            >
+              {isAddClicked ? "Undo" : "Add"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Nút Add */}
       {authFound && !isAddClicked && (
@@ -401,6 +396,17 @@ const styles = StyleSheet.create({
     width: 100,
     marginBottom: 10,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ff8c00",
+    paddingVertical: 20,
+    paddingHorizontal: 10, 
+    position: "absolute", 
+    top: 0, 
+    left: 0, 
+    right: 0, 
+    },
 });
 
 export default ItemAddFriend;

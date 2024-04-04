@@ -174,15 +174,27 @@ export const getListRooms = () => {
   });
 };
 
+// export const findAuth = async (data) => {
+//   return new Promise((reject, resolve) => {
+//     axios
+//       .post(`${API_URL}/auth/findAuth`, data, config)
+//       .then((res) => {
+//         reject(res);
+//       })
+//       .catch((err) => {
+//         resolve(err);
+//       });
+//   });
+// };
 export const findAuth = async (data) => {
-  return new Promise((reject, resolve) => {
+  return new Promise((resolve, reject) => {
     axios
       .post(`${API_URL}/auth/findAuth`, data, config)
       .then((res) => {
-        reject(res);
+        resolve(res.data);
       })
       .catch((err) => {
-        resolve(err);
+        reject(err);
       });
   });
 };

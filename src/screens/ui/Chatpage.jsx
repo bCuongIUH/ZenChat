@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   TextInput,
@@ -16,8 +16,12 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
+import { getListRooms } from "../../untills/api";
+import { AuthContext } from "../../untills/context/AuthContext";
 
-export const Chatpage = () => {
+export const Chatpage = ({ route }) => {
+  const { user } = useContext(AuthContext);
+  
   const nav = useNavigation();
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -27,6 +31,9 @@ export const Chatpage = () => {
 
   const [searchStarted, setSearchStarted] = useState(false);
 
+  const [addedUsers, setAddedUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
+
   const handleSearchIconPress = () => {
     setSearchStarted(false);
     setIsSearching(!isSearching);
@@ -34,50 +41,44 @@ export const Chatpage = () => {
 
   const handleAddFriendPress = () => {
     setActionModalVisible(true);
-    
   };
 
   const handleCreateChatPress = () => {
     setActionModalVisible(false);
-    nav.navigate("ItemAddFriend")
+    nav.navigate("ItemAddFriend");
   };
 
   const handleModalClose = () => {
-    
     setActionModalVisible(false);
   };
 
   const handleMainScreenPress = () => {
     setIsSearching(false);
   };
+  const handleTodoItemPress = (item) => {
+    nav.navigate("Message", { item });
+  };
+
+  const getDisplayUser = (room) => {
+    if (!room || !room.creator) {
+      return;
+    } else {
+      return room.creator._id === user?._id ? room.recipient : room.creator;
+    }
+  };
 
   useEffect(() => {
-    setTodoList([
-      {
-        id: 1,
-        name: "Bach Cuong",
-        status: "noi di dung so",
-        image: "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-      {
-        id: 1,
-        name: "Bach Cuong",
-        status: "noi di dung so",
-        image: "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-      {
-        id: 1,
-        name: "Bach Cuong",
-        status: "noi di dung so",
-        image: "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-      {
-        id: 1,
-        name: "Bach Cuong",
-        status: "noi di dung so",
-        image: "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-    ]);
+    const fetchData = async () => {
+      getListRooms()
+        .then((res) => {
+          setRooms(res.data);
+        })
+        .catch((err) => {
+          console.log(err);
+          console.log("Error occurred while fetching data");
+        });
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -92,16 +93,6 @@ export const Chatpage = () => {
       }
     }
   }, [searchStarted, searchText, todoList]);
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.itemContainer}>
-      <Image source={{ uri: item.image }} style={styles.itemImage} />
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemStatus}>{item.status}</Text>
-      </View>
-    </TouchableOpacity>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -168,8 +159,24 @@ export const Chatpage = () => {
 
       <View style={styles.content}>
         <FlatList
-          data={filteredTodoList}
-          renderItem={renderItem}
+          data={rooms}
+          renderItem={({ item }) => {
+            const displayUser = getDisplayUser(item);
+            return (
+              <TouchableOpacity
+                style={styles.itemContainer}
+                onPress={() => handleTodoItemPress(item)}
+              >
+                <Image
+                  source={{ uri: displayUser.avatar }}
+                  style={styles.itemImage}
+                />
+                <View style={styles.itemDetails}>
+                  <Text style={styles.itemName}>{displayUser.fullName}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={styles.listContainer}
         />
@@ -212,7 +219,6 @@ export const Chatpage = () => {
                 : "black"
             }
           />
-          
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -223,7 +229,9 @@ export const Chatpage = () => {
             name="user"
             size={35}
             color={
-              nav && nav.route && nav.route.name === "User" ? "#ff8c00" : "black"
+              nav && nav.route && nav.route.name === "User"
+                ? "#ff8c00"
+                : "black"
             }
           />
         </TouchableOpacity>
@@ -231,11 +239,10 @@ export const Chatpage = () => {
     </SafeAreaView>
   );
 };
-const {width, height} = Dimensions.get('window')
+const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   header: {
-    //width: "100%",
-    width : width*1,
+    width: width * 1,
     height: 80,
     paddingTop: 20,
     backgroundColor: "#ff8c00",
@@ -244,23 +251,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    // width: "100%",
-    // height: "100%",
-    width : width *1,
-    height : height*1,
+    width: width * 1,
+    height: height * 1,
   },
   searchBarContainer: {
     position: "absolute",
     height: 50,
-    // width: "100%",
-    width: width*1,
+    width: width * 1,
     flexDirection: "row",
     padding: 10,
   },
   searchInput: {
     flex: 1,
-    // height: "80%",
-    height :35,
+    height: 35,
     backgroundColor: "white",
     borderRadius: 10,
     paddingLeft: 10,
@@ -281,8 +284,7 @@ const styles = StyleSheet.create({
   },
   modalcontent: {
     backgroundColor: "gray",
-    // height: "25%",
-    height : height *0.25,
+    height: height * 0.25,
     justifyContent: "center",
     alignContent: "center",
     alignItems: "center",
@@ -300,17 +302,14 @@ const styles = StyleSheet.create({
     alignContent: "center",
     alignItems: "center",
     borderRadius: 10,
-   
-    height :30,
-    width : width * 0.7,
-
+    height: 30,
+    width: width * 0.7,
     backgroundColor: "#ff8c00",
     margin: 5,
   },
   content: {
     flex: 1,
-    // width: "100%",
-    width : width *1,
+    width: width * 1,
   },
   listContainer: {
     paddingHorizontal: 10,
@@ -330,7 +329,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     marginRight: 10,
-    borderRadius :90,
+    borderRadius: 90,
   },
   itemDetails: {
     flex: 1,

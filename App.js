@@ -25,6 +25,7 @@ import ItemUpdateUser from "./src/screens/ui/item-update/itemUpdateUser";
 import ItemAddFriend from "./src/screens/ui/item-Friend/itemAddFriend";
 import { UserProvider } from "./src/screens/ui/component/findUser";
 import ItemUpdatePassword from "./src/screens/ui/item-update-password/itemUpdatePassword";
+import Message from "./src/screens/ui/mess/mess";
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -74,6 +75,7 @@ function App() {
 
               <Stack.Screen name="ItemAddFriend" component={ItemAddFriend} />
               <Stack.Screen name="ItemUpdatePassword" component={ItemUpdatePassword} />
+              <Stack.Screen name="Message" component={Message} />
               {/* <Stack.Screen name="ItemAddFriend">
                 {() => (
                   <RequireAuth>
