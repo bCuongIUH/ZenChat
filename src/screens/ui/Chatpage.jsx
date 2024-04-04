@@ -182,6 +182,19 @@ export const Chatpage = ({ route }) => {
       socket.off(`updateLastMessagesed${user.email}`);
     };
   }, []);
+  
+  useEffect(() => {
+    // Lắng nghe sự kiện socket khi một phòng mới được tạo
+    socket.on("newRoomCreated", (newRoom) => {
+      setRooms((prevRooms) => [...prevRooms, newRoom]);
+    });
+
+    return () => {
+      // Ngắt kết nối socket khi component unmounts
+      socket.off("newRoomCreated");
+    };
+  }, [socket]);
+
 
   return (
     <SafeAreaView style={styles.container}>

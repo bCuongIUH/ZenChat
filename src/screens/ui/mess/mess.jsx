@@ -21,7 +21,7 @@ import { AuthContext } from "../../../untills/context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 
 export const Message = ({ route }) => {
-  const { id, nameRoom, avatar,updateLastMessage } = route.params;
+  const { id, nameRoom, avatar, updateLastMessage } = route.params;
   const [messages, setMessages] = useState([]);
   const socket = useContext(SocketContext);
   const [texting, setTexting] = useState("");
@@ -116,7 +116,9 @@ export const Message = ({ route }) => {
         <TouchableOpacity onPress={() => nav.goBack()}>
           <View style={styles.goBackContainer}>
             <AntDesign name="arrowleft" size={24} color="black" />
-            <Text style={styles.goBackText}>{selectedUser ? selectedUser.fullName : ''}</Text>
+            <Text style={styles.goBackText}>
+              {selectedUser ? selectedUser.fullName : ""}
+            </Text>
           </View>
         </TouchableOpacity>
         <View style={styles.headerRight}>
@@ -133,11 +135,13 @@ export const Message = ({ route }) => {
       </View>
 
       <ScrollView ref={messRef} style={styles.messageContent}>
-        {messages.map((message, index) => (
-          <View key={index} style={styles.message}>
-            <Text>{message.content}</Text>
-          </View>
-        ))}
+        <View style={styles.messageContainer}>
+          {messages.map((message, index) => (
+            <View key={index} style={styles.message}>
+              <Text style={styles.messageText}>{message.content}</Text>
+            </View>
+          ))}
+        </View>
       </ScrollView>
 
       <View style={styles.inputSection}>
@@ -150,7 +154,7 @@ export const Message = ({ route }) => {
         <TouchableOpacity style={styles.sendButton} onPress={handleSendMess}>
           <Ionicons name="send" size={24} color="white" />
         </TouchableOpacity>
-        {/* Các nút attach khác */}
+        
       </View>
     </View>
   );
@@ -176,10 +180,10 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginRight: 10,
   },
-  messageContent: {
-    flex: 1,
-    padding: 10,
-  },
+  // messageContent: {
+  //   flex: 1,
+  //   padding: 10,
+  // },
   inputSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -212,6 +216,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "black",
+  },
+  messageContent: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+  messageContainer: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+  },
+  message: {
+    alignSelf: "flex-end",
+    backgroundColor: "#ffa500", 
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 10,
+    maxWidth: "80%", 
+  },
+  messageText: {
+    color: "#fff", 
   },
 });
 
