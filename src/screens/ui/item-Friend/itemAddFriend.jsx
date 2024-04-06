@@ -14,92 +14,85 @@ import { useNavigation } from "@react-navigation/native";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { SocketContext } from "../../../untills/context/SocketContext";
 import { AuthContext } from "../../../untills/context/AuthContext";
+
 const ItemAddFriend = () => {
   const { user } = useContext(AuthContext);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [authFound, setAuthFound] = useState(null);
+  const { handleFindUser } = useUser();
+  const [authFound, setAuthFound] = useState([]);
   const [isAddClicked, setIsAddClicked] = useState(false);
   const navigation = useNavigation();
   const socket = useContext(SocketContext);
+  
+
   const handleSearchChange = (text) => {
     setPhoneNumber(text);
   };
 
   const handleFoundUser = async () => {
-    try {
-      const data = { phoneNumber };
-      const result = await findAuth(data);
-      setAuthFound(result);
-    } catch (error) {
-      console.error("Error finding user:", error);
+    let data = phoneNumber;
+    if (phoneNumber.startsWith("0")) {
+      data = `(+84)${phoneNumber.slice(1)}`;
+    }
+    if (phoneNumber.startsWith("+84")) {
+      data = `(+84)${phoneNumber.slice(1)}`;
+    }
+    const result = await handleFindUser(data);
+
+    if (result !== undefined) {
+      setAuthFound([result]);
     }
   };
 
-  useEffect(() => {
-    console.log(typeof authFound);
-  }, [authFound]);
-
   const handleAddClick = () => {
-    if (!authFound) {
-      console.error("No user found to add");
-      return;
-    }
-
     const message = "hello";
-    const email = authFound.email;
+    const authen = [authFound[0].email];
+    const email = authen[0];
     const data1 = { email, message };
 
     createRooms(data1)
       .then((res) => {
         if (res.data.message === "Đã tạo phòng với User này ròi") {
-          alert("Đã tạo phòng với User này rồi!!!"); //trc đó có add room
+          alert("Đã tạo phòng với User này ròi !!!");
           return;
         }
         if (res.data.status === 400) {
-          alert("Không thể nhắn tin với chính bản thân mình!!!"); //
+          alert("Không thể nhắn tin với chính bản thân mình !!!");
           return;
         } else {
-          // Xử lý sau khi tạo phòng thành công
-          // formRef.current.style.display = "none";
+          //window.location.reload();
+          const idFriend = {
+            id: res.data.recipient._id,
+          };
+         // kieemr tra trang thai ban be
+          sendFriends(idFriend)
+            .then((userRes) => {
+              if (userRes.data) {
+                formRef.current.style.display = "none";
+                alert("Gửi lời mời kết bạn thành công");
+                return;
+              } else {
+                alert("Gửi lời mời kết bạn không thành công");
+                return;
+              }
+            })
+            .catch((error) => {
+              alert("Lỗi hệ thống");
+            });
           const roomInfo = res.data.room; // Thông tin về phòng mới tạo
           socket.emit("newRoomCreated", roomInfo);
-          navigation.navigate("Chatpage");
-        } 
+          navigation.navigate("Chatpage", { roomInfo , user: authFound[0]}); // Truyền thông tin phòng chat về Chatpage
+        }
       })
       .catch((err) => {
         alert("Lỗi hệ thống");
       });
   };
-  const updateLastMessage = (updatedRoom) => {
-    setRooms((prevRooms) => {
-      // Cập nhật phòng đã được cập nhật
-      return prevRooms.map((room) => {
-        if (room === undefined || updatedRoom === undefined) {
-          return room;
-        }
-        if (room._id === updatedRoom._id) {
-          return updatedRoom;
-        }
-        return room;
-      });
-    });
-  };
 
-  //lấy id của room///////////////////////////////////////////////////////////////////////rooms
-  const updateListRooms = (updatedRoom) => {
-    setRooms((prevRooms) => {
-      // Cập nhật phòng đã được cập nhật
-      return prevRooms.map((room) => {
-        if (room === undefined || updatedRoom === undefined) {
-          return room;
-        }
-        if (room._id === updatedRoom._id) {
-          return updatedRoom;
-        }
-        return room;
-      });
-    });
-  };
+   useEffect(() => {
+    console.log(typeof authFound);
+  }, [authFound]);
+
   useEffect(() => {
     socket.on("connected", () => console.log("Connected"));
     socket.on(user.email, (roomSocket) => {
@@ -151,58 +144,54 @@ const ItemAddFriend = () => {
   }, []);
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>SignUp</Text>
       </View>
-      <TextInput
-        style={styles.input}
-        onChangeText={handleSearchChange}
-        placeholder="Nhập số điện thoại"
-        value={phoneNumber}
-      />
-      <Button title="Tìm kiếm" onPress={handleFoundUser} />
 
-      {authFound && (
-        <View key={authFound._id} style={styles.showAdd}>
+      {/* Thanh tìm kiếm */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.input}
+          onChangeText={handleSearchChange}
+          placeholder="Nhập số điện thoại"
+          value={phoneNumber}
+        />
+        <TouchableOpacity onPress={handleFoundUser}>
+          <FontAwesome name="search" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Thông tin người dùng */}
+      {authFound.length > 0 && (
+        <View style={styles.userInfoContainer}>
           <View style={styles.userInfo}>
-            <Image source={{ uri: authFound.avatar }} style={styles.avatar} />
-            <Text style={styles.fullName}>{authFound.fullName}</Text>
-            <Text style={styles.phoneNumber}>
-              PhoneNumber: {authFound.phoneNumber}
-            </Text>
+            <Image
+              source={{ uri: authFound[0].avatar }}
+              style={styles.avatar}
+            />
+            <View style={styles.textContainer}>
+              <Text style={styles.fullName}>{authFound[0].fullName}</Text>
+              <Text style={styles.phoneNumber}>
+                PhoneNumber: {authFound[0].phoneNumber}
+              </Text>
+            </View>
           </View>
-          <TouchableOpacity onPress={handleAddClick}>
-            <Text
-              style={[
-                styles.addButton,
-                {
-                  backgroundColor: isAddClicked
-                    ? "rgb(204, 82, 30)"
-                    : "rgb(204, 82, 30)",
-                },
-              ]}
-            >
-              {isAddClicked ? "Undo" : "Add"}
-            </Text>
-          </TouchableOpacity>
+          {/* Nút thêm bạn và nút hủy */}
+          <View style={styles.buttonContainer}>
+            {!isAddClicked ? (
+              <TouchableOpacity onPress={handleAddClick}>
+                <Text style={styles.addButton}>Thêm bạn</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => setIsAddClicked(false)}>
+                <Text style={styles.cancelButton}>Cancel</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      )}
-
-      {/* Nút Add */}
-      {authFound && !isAddClicked && (
-        <TouchableOpacity onPress={handleAddClick}>
-          <Text style={styles.addButton}>Thêm bạn</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Nút Cancel */}
-      {authFound && isAddClicked && (
-        <TouchableOpacity onPress={() => setIsAddClicked(false)}>
-          <Text style={styles.cancelButton}>Cancel</Text>
-        </TouchableOpacity>
       )}
     </View>
   );
@@ -214,50 +203,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 20,
-    backgroundColor: "white",
-  },
-  userInfo: {
-    alignItems: "center",
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-  },
-  fullName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  phoneNumber: {
-    fontSize: 16,
-    color: "gray",
-    marginBottom: 20,
-  },
-  addButton: {
-    backgroundColor: "#ff8c00",
-    color: "white",
-    padding: 10,
-    borderRadius: 5,
-    textAlign: "center",
-    width: 100,
-    marginBottom: 10,
-  },
-  cancelButton: {
-    backgroundColor: "#ff8c00",
-    color: "white",
-    padding: 10,
-    borderRadius: 5,
-    textAlign: "center",
-    width: 100,
-    marginBottom: 10,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -268,6 +213,68 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 10,
+    marginTop: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    backgroundColor: "white",
+    flex: 1,
+    marginRight: 10,
+  },
+  userInfoContainer: {
+    marginTop: 100,
+  },
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  textContainer: {
+    marginLeft: 10,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  fullName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  phoneNumber: {
+    fontSize: 16,
+    color: "gray",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+  },
+  addButton: {
+    backgroundColor: "#ff8c00",
+    color: "white",
+    padding: 10,
+    borderRadius: 5,
+    textAlign: "center",
+    width: 100,
+    marginRight: 10,
+  },
+  cancelButton: {
+    backgroundColor: "#ff8c00",
+    color: "white",
+    padding: 10,
+    borderRadius: 5,
+    textAlign: "center",
+    width: 100,
   },
 });
 

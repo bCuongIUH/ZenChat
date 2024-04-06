@@ -5,9 +5,9 @@ const UserContext = createContext();
 
 export const useUser = () => useContext(UserContext);
 
+// Creating a provider
 export const UserProvider = ({ children }) => {
   const [userFound, setUserFound] = useState([]);
-
   const handleFindUser = async (phoneNumber) => {
     const data = { phoneNumber };
     try {
@@ -15,6 +15,7 @@ export const UserProvider = ({ children }) => {
       if (!res.data) {
         alert("Không tìm thấy người dùng");
       } else {
+        // setUserFound(res.data);
         return res.data;
       }
     } catch (err) {

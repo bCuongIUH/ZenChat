@@ -16,7 +16,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
-import { getListRooms, createRoom } from "../../untills/api"; // Thêm import cho createRoom
+import { getListRooms, createRooms } from "../../untills/api";
 import { AuthContext } from "../../untills/context/AuthContext";
 import { SocketContext } from "../../untills/context/SocketContext";
 
@@ -31,10 +31,11 @@ export const Chatpage = ({ route }) => {
   const [filteredTodoList, setFilteredTodoList] = useState([]);
 
   const [searchStarted, setSearchStarted] = useState(false);
-
+  const [roomInfo, setRoomInfo] = useState(null);
   const [addedUsers, setAddedUsers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const socket = useContext(SocketContext);
+  
   // const roomId =
   //   route.params && route.params.roomId ? route.params.roomId : null;
 
@@ -60,43 +61,45 @@ export const Chatpage = ({ route }) => {
     setIsSearching(false);
   };
 
-  const handleTodoItemPress = (item) => {
-    // Kiểm tra xem phòng chat với người dùng đã tồn tại hay không
-    const existingRoom = rooms.find((room) => {
-      return (
-        (room.creator._id === user._id && room.recipient._id === item._id) ||
-        (room.creator._id === item._id && room.recipient._id === user._id)
-      );
-    });
+  // const handleTodoItemPress = (item) => {
+  //   const existingRoom = rooms.find((room) => {
+  //     return (
+  //       (room.creator._id === user._id && room.recipient._id === item._id) ||
+  //       (room.creator._id === item._id && room.recipient._id === user._id)
+  //     );
+  //   });
 
-    if (existingRoom) {
-      // Nếu phòng đã tồn tại, chuyển người dùng đến màn hình chat với phòng đó
-      nav.navigate("Message", {
-        id: existingRoom._id,
-        nameRoom: existingRoom.fullName,
-        avatar: existingRoom.avatar,
-      });
-    } else {
-      // Nếu phòng chưa tồn tại, tạo phòng mới và chuyển người dùng đến màn hình chat với phòng mới
-      const newRoomData = {
-        creator: user._id,
-        recipient: item._id,
-      };
-      createRoom(newRoomData)
-        .then((createdRoom) => {
-          nav.navigate("Message", {
-            id: createdRoom._id,
-            nameRoom: createdRoom.fullName,
-            avatar: createdRoom.avatar,
-          });
-        })
-        .catch((error) => {
-          console.log("Error creating room:", error);
-          // Xử lý lỗi tạo phòng
-        });
-    }
-  };
+  //   if (existingRoom) {
+  //     nav.navigate("Message", {
+  //       id: existingRoom._id,
+  //       nameRoom: existingRoom.fullName,
+  //       avatar: existingRoom.avatar,
+  //       avatar: existingRoom.recipient.avatar,
+  //       fullName: existingRoom.recipient.fullName,
+  //     });
+  //   } else {
+  //     const newRoomData = {
+  //       creator: user._id,
+  //       recipient: item._id,
+  //       //
 
+  //     };
+  //     createRooms(newRoomData)
+  //       .then((createRooms) => {
+  //         nav.navigate("Message", {
+  //           id: createRooms._id,
+  //           nameRoom: createRooms.fullName,
+  //           avatar: createRooms.avatar,
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.log("Error creating room:", error);
+  //         // Xử lý lỗi tạo phòng
+  //       });
+  //   }
+  // };
+
+  // //
   const getDisplayUser = (room) => {
     if (!room || !room.creator) {
       return;
@@ -104,7 +107,6 @@ export const Chatpage = ({ route }) => {
       return room.creator._id === user?._id ? room.recipient : room.creator;
     }
   };
-
   useEffect(() => {
     const fetchData = async () => {
       getListRooms()
@@ -119,6 +121,111 @@ export const Chatpage = ({ route }) => {
     fetchData();
   }, []);
 
+//
+const isFriend = (userId) => {
+  // Kiểm tra xem userId có trong danh sách bạn bè của người dùng không
+  return user.friends.some((friend) => friend._id === userId);
+};
+//
+  // const handleTodoItemPress = (item) => {
+  //   const existingRoom = rooms.find((room) => {
+  //     return (
+  //       (room.creator._id === user._id && room.recipient._id === item._id) ||
+  //       (room.creator._id === item._id && room.recipient._id === user._id)
+  //     );
+  //   });
+
+  //   let roomName;
+  //   if (existingRoom) {
+  //     roomName = existingRoom.fullName;
+  //   } else {
+  //     // Tạo tên phòng dựa trên người dùng được chọn và người tạo phòng
+  //     roomName =
+  //       user._id === item._id
+  //         ? `${item.fullName} - ${user.fullName}`
+  //         : `${user.fullName} - ${item.fullName}`;
+  //   }
+
+  //   if (existingRoom) {
+  //     nav.navigate("Message", {
+  //       id: existingRoom._id,
+  //       nameRoom: roomName,
+  //       avatar: existingRoom.avatar,
+  //       fullName: existingRoom.recipient.fullName,
+        
+  //     });
+  //   } else {
+  //     const newRoomData = {
+  //       creator: user._id,
+  //       recipient: item._id,
+  //       fullName: roomName,
+  //     };
+  //     createRooms(newRoomData)
+  //       .then((createdRoom) => {
+  //         nav.navigate("Message", {
+  //           id: createdRoom._id,
+  //           nameRoom: roomName,
+  //           avatar: createdRoom.avatar,
+  //           fullName: item.fullName,
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.log("Error creating room:", error);
+  //         // Xử lý lỗi tạo phòng
+  //       });
+  //   }
+  // };
+
+  const handleTodoItemPress = (item) => {
+    const existingRoom = rooms.find((room) => {
+      return (
+        (room.creator._id === user._id && room.recipient._id === item._id) ||
+        (room.creator._id === item._id && room.recipient._id === user._id)
+      );
+    });
+  
+    let roomName;
+    if (existingRoom) {
+      roomName = existingRoom.fullName;
+    } else {
+      // Tạo tên phòng dựa trên người dùng được chọn và người tạo phòng
+      roomName =
+        user._id === item._id
+          ? `${item.fullName} - ${user.fullName}`
+          : `${user.fullName} - ${item.fullName}`;
+    }
+  
+    if (existingRoom) {
+      nav.navigate("Message", {
+        id: existingRoom._id,
+        nameRoom: roomName,
+        avatar: existingRoom.avatar,
+        fullName: existingRoom.recipient.fullName,
+        isFriend: isFriend(item._id), // Thêm trạng thái bạn bè vào object
+      });
+    } else {
+      const newRoomData = {
+        creator: user._id,
+        recipient: item._id,
+        fullName: roomName,
+      };
+      createRooms(newRoomData)
+        .then((createdRoom) => {
+          nav.navigate("Message", {
+            id: createdRoom._id,
+            nameRoom: roomName,
+            avatar: createdRoom.avatar,
+            fullName: item.fullName,
+            isFriend: isFriend(item._id), // Thêm trạng thái bạn bè vào object
+          });
+        })
+        .catch((error) => {
+          console.log("Error creating room:", error);
+          // Xử lý lỗi tạo phòng
+        });
+    }
+  };
+  
   useEffect(() => {
     if (searchStarted || searchText === "") {
       if (searchText === "") {
@@ -131,7 +238,20 @@ export const Chatpage = ({ route }) => {
       }
     }
   }, [searchStarted, searchText, todoList]);
-
+  const updateListRooms = (updatedRoom) => {
+    setRooms((prevRooms) => {
+      // Cập nhật phòng đã được cập nhật
+      return prevRooms.map((room) => {
+        if (room === undefined || updatedRoom === undefined) {
+          return room;
+        }
+        if (room._id === updatedRoom._id) {
+          return updatedRoom;
+        }
+        return room;
+      });
+    });
+  };
   useEffect(() => {
     socket.on("connected", () => console.log("Connected"));
     socket.on(user.email, (roomSocket) => {
@@ -182,7 +302,7 @@ export const Chatpage = ({ route }) => {
       socket.off(`updateLastMessagesed${user.email}`);
     };
   }, []);
-  
+
   useEffect(() => {
     // Lắng nghe sự kiện socket khi một phòng mới được tạo
     socket.on("newRoomCreated", (newRoom) => {
@@ -195,6 +315,23 @@ export const Chatpage = ({ route }) => {
     };
   }, [socket]);
 
+  //
+  useEffect(() => {
+    const fetchData = async () => {
+      getListRooms()
+        .then((res) => {
+          // const filteredRooms = res.data.filter(room => room.lastMessageSent);
+
+          // Chỉ setRooms với các object đã được lọc
+          setRooms(res.data);
+        })
+        .catch((err) => {
+          console.log(err);
+          console.log("Đã rơi zô đây");
+        });
+    };
+    fetchData();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -259,22 +396,24 @@ export const Chatpage = ({ route }) => {
         </View>
       </Modal>
 
-      <View style={styles.content}>
+      {/* <View style={styles.content}>
         <FlatList
           data={rooms}
           renderItem={({ item }) => {
             const displayUser = getDisplayUser(item);
             return (
-              <TouchableOpacity
+              <TouchableOpacity //key={}//ok
                 style={styles.itemContainer}
                 onPress={() => handleTodoItemPress(displayUser)}
               >
                 <Image
-                  source={{ uri: displayUser.avatar }}
+                  source={{ uri: displayUser && displayUser.avatar }}
                   style={styles.itemImage}
                 />
                 <View style={styles.itemDetails}>
-                  <Text style={styles.itemName}>{displayUser.fullName}</Text>
+                  <Text style={styles.itemName}>
+                    {displayUser && displayUser.fullName}
+                  </Text>
                 </View>
               </TouchableOpacity>
             );
@@ -282,7 +421,38 @@ export const Chatpage = ({ route }) => {
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={styles.listContainer}
         />
-      </View>
+      </View> */}
+      <View style={styles.content}>
+  <FlatList
+    data={rooms}
+    renderItem={({ item }) => {
+      const displayUser = getDisplayUser(item);
+      // Kiểm tra xem displayUser có phải là bạn bè hay không
+      const friendStatus = isFriend(displayUser._id);
+      // Thêm trường isFriend vào object displayUser
+      displayUser.isFriend = friendStatus;
+      return (
+        <TouchableOpacity
+          style={styles.itemContainer}
+          onPress={() => handleTodoItemPress(displayUser)}
+        >
+          <Image
+            source={{ uri: displayUser && displayUser.avatar }}
+            style={styles.itemImage}
+          />
+          <View style={styles.itemDetails}>
+            <Text style={styles.itemName}>
+              {displayUser && displayUser.fullName}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }}
+    keyExtractor={(item, index) => index.toString()}
+    contentContainerStyle={styles.listContainer}
+  />
+</View>
+
 
       <StatusBar backgroundColor="gray" barStyle="dark-content" />
       <View style={styles.menuView}>
@@ -353,8 +523,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    width: width * 1,
-    height: height * 1,
   },
   searchBarContainer: {
     position: "absolute",
