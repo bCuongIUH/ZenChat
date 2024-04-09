@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   View,
   TextInput,
@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import { findAuth, createRooms } from "../../../untills/api";
+import { findAuth, createRooms, sendFriends } from "../../../untills/api";
 import { useUser } from "../../ui/component/findUser";
 import { useNavigation } from "@react-navigation/native";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
@@ -23,7 +23,8 @@ const ItemAddFriend = () => {
   const [isAddClicked, setIsAddClicked] = useState(false);
   const navigation = useNavigation();
   const socket = useContext(SocketContext);
-  
+  const formRef = useRef(null);
+  const [rooms, setRooms] = useState([]);
 
   const handleSearchChange = (text) => {
     setPhoneNumber(text);
@@ -60,16 +61,19 @@ const ItemAddFriend = () => {
           alert("Không thể nhắn tin với chính bản thân mình !!!");
           return;
         } else {
-          //window.location.reload();
+          // window.location.reload();
           const idFriend = {
             id: res.data.recipient._id,
           };
-         // kieemr tra trang thai ban be
           sendFriends(idFriend)
             .then((userRes) => {
+              console.log(userRes.data);
               if (userRes.data) {
-                formRef.current.style.display = "none";
+                if (formRef.current) {
+                  formRef.current.style.display = "none";
+                }
                 alert("Gửi lời mời kết bạn thành công");
+
                 return;
               } else {
                 alert("Gửi lời mời kết bạn không thành công");
@@ -77,37 +81,41 @@ const ItemAddFriend = () => {
               }
             })
             .catch((error) => {
+              console.log(error);
               alert("Lỗi hệ thống");
             });
-          const roomInfo = res.data.room; // Thông tin về phòng mới tạo
+          const roomInfo = res.data.room;
           socket.emit("newRoomCreated", roomInfo);
-          navigation.navigate("Chatpage", { roomInfo , user: authFound[0]}); // Truyền thông tin phòng chat về Chatpage
+          navigation.navigate("Chatpage", { roomInfo, user: authFound[0] });
         }
       })
       .catch((err) => {
+        console.log(err);
         alert("Lỗi hệ thống");
       });
+    setPhoneNumber("");
+    setAuthFound([]);
   };
 
-   useEffect(() => {
+  useEffect(() => {
     console.log(typeof authFound);
   }, [authFound]);
 
-  useEffect(() => {
-    socket.on("connected", () => console.log("Connected"));
-    socket.on(user.email, (roomSocket) => {
-      setRooms((prevRooms) => [...prevRooms, roomSocket]);
-    });
-    socket.on(user.email, (roomSocket) => {
-      updateListRooms(roomSocket.rooms);
-    });
+  // useEffect(() => {
+  //   socket.on("connected", () => console.log("Connected"));
+  //   socket.on(user.email, (roomSocket) => {
+  //     setRooms((prevRooms) => [...prevRooms, roomSocket]);
+  //   });
+  //   socket.on(user.email, (roomSocket) => {
+  //     updateListRooms(roomSocket.rooms);
+  //   });
 
-    return () => {
-      socket.off("connected");
-      socket.off(user.email);
-      socket.off(user.email);
-    };
-  }, []);
+  //   return () => {
+  //     socket.off("connected");
+  //     socket.off(user.email);
+  //     socket.off(user.email);
+  //   };
+  // }, []);
   useEffect(() => {
     socket.on(`updateLastMessages${user.email}`, (lastMessageUpdate) => {
       setRooms((prevRooms) => {
@@ -142,12 +150,14 @@ const ItemAddFriend = () => {
       socket.off(`updateLastMessagesed${user.email}`);
     };
   }, []);
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="black" />
+          
         </TouchableOpacity>
       </View>
 
@@ -200,7 +210,7 @@ const ItemAddFriend = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    //alignItems: "center",
     justifyContent: "center",
   },
   header: {

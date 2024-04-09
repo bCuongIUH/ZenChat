@@ -73,18 +73,18 @@ function App() {
               <Stack.Screen name="ItemSecurity" component={ItemSecurity} />
               <Stack.Screen name="ItemUpdateUser" component={ItemUpdateUser} />
 
-              <Stack.Screen name="ItemAddFriend" component={ItemAddFriend} />
+              {/* <Stack.Screen name="ItemAddFriend" component={ItemAddFriend} /> */}
               <Stack.Screen name="ItemUpdatePassword" component={ItemUpdatePassword} />
               <Stack.Screen name="Message" component={Message} />
-              {/* <Stack.Screen name="ItemAddFriend">
+              <Stack.Screen name="ItemAddFriend">
                 {() => (
-                  <RequireAuth>
+                  //<RequireAuth>
                     <UserProvider>
                       <ItemAddFriend />
                     </UserProvider>
-                  </RequireAuth>
+                  //</RequireAuth>
                 )}
-              </Stack.Screen> */}
+              </Stack.Screen>
             </Stack.Navigator>
             </SocketContext.Provider>
           </SignupContext>

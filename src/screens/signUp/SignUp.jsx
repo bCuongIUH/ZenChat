@@ -42,7 +42,15 @@ export const SignUp = () => {
   const [errDateOfBirth, setErrDateOfBirth] = useState("");
   const timeoutRef = useRef(null);
   const [error, setError] = useState("");
-
+  const handleDateChange = (date) => {
+    // Kiểm tra xem ngày sinh có hợp lệ không và cập nhật giá trị
+    if (date) {
+      setDateOfBirth(date);
+      setErrDateOfBirth('');
+    } else {
+      setErrDateOfBirth('Please select your date of birth');
+    }
+  };
   //regax
   const regexPatterns = {
     fullName:
@@ -212,21 +220,19 @@ export const SignUp = () => {
 
       {/* Ngày sinh */}
       <View style={styles.inputView}>
-        <DatePicker
-          selected={dateOfBirth}
-          onChange={setDateOfBirth}
-          dateFormat="dd/MM/yyyy"
-          placeholderText="Date of Birth"
-          minDate={new Date("1900-01-01")}
-          maxDate={new Date()}
-          showMonthDropdown
-          showYearDropdown
-          dropdownMode="select"
-          style={styles.datePickerStyle}
-          customInput={<TextInput style={styles.inputStyle} />}
-          dropdownStyles={{ monthDropdown: styles.monthDropdownStyle }}
-          value={format(dateOfBirth, "dd/MM/yyyy")}
-        />
+      <DatePicker
+        selected={dateOfBirth}
+        onChange={handleDateChange}
+        dateFormat="dd/MM/yyyy"
+        placeholderText="Date of Birth"
+        minDate={new Date("1900-01-01")}
+        maxDate={new Date()}
+        showMonthDropdown
+        showYearDropdown
+        dropdownMode="select"
+        style={styles.datePickerStyle}
+        customInput={<TextInput style={styles.inputStyle} />}
+      />
         <Text style={styles.errorText}>{errDateOfBirth}</Text>
       </View>
 
