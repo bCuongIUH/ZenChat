@@ -6,65 +6,47 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Option,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { postRegister } from "../../untills/api";
-import { Auth, SignupContext } from "../../untills/context/SignupContext";
-import { AuthContext } from "../../untills/context/AuthContext";
-
-import { AxiosError } from "axios";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { Auth } from "../../untills/context/SignupContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { format } from "date-fns";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export const SignUp = () => {
   const [fullName, setFullName] = useState("");
-  // const [dateOfBirth, setDateOfBirth] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState(new Date());
-
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [passWord, setPassword] = useState("");
   const [gender, setGender] = useState("");
-  const [avatar, setAvatar] = useState("");
   const { handler } = useContext(Auth);
   const navigation = useNavigation();
-
-  const errFormRef = useRef([]);
-  const [errForm, setErrForm] = useState("");
 
   const [errFullName, setErrFullName] = useState("");
   const [errPhoneNumber, setErrPhoneNumber] = useState("");
   const [errEmail, setErrEmail] = useState("");
   const [errPassWord, setErrPassWord] = useState("");
   const [errDateOfBirth, setErrDateOfBirth] = useState("");
-  const timeoutRef = useRef(null);
   const [error, setError] = useState("");
-  const handleDateChange = (date) => {
-    // Kiểm tra xem ngày sinh có hợp lệ không và cập nhật giá trị
-    if (date) {
-      setDateOfBirth(date);
-      setErrDateOfBirth('');
-    } else {
-      setErrDateOfBirth('Please select your date of birth');
-    }
-  };
+  const timeoutRef = useRef(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [ErrForm,setErrForm] = useState("")
+
   //regax
   const regexPatterns = {
-    fullName:
-      /^[a-zA-Z\sáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđĐ]+$/,
+    fullName: /^[a-zA-Z\sáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđĐ]+$/,
     phoneNumber: /^\(\+84\)\d{9}$/,
     email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     passWord: /^[a-zA-Z\d]{6,}$/,
-    //dateOfBirth: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/,
   };
+
   useEffect(() => {
     const removeToken = async () => {
       const token = await AsyncStorage.getItem("token");
       if (token) {
-        await AsyncStorage.removeItem("token"); // sử dụng asyncStorgae k dùng đc localStorage
+        await AsyncStorage.removeItem("token");
         handler.setAuth(undefined);
       }
     };
@@ -72,9 +54,7 @@ export const SignUp = () => {
     removeToken();
   }, []);
 
-  const handleSignUp = async (event) => {
-    event.preventDefault();
-
+  const handleSignUp = async () => {
     // Kiểm tra và cập nhật lỗi cho trường FullName
     if (!fullName || !regexPatterns.fullName.test(fullName)) {
       setErrFullName("Tên chứa ký tự hoặc số. Vui lòng nhập lại!");
@@ -92,8 +72,6 @@ export const SignUp = () => {
     } else if (!phoneNumber.startsWith("+84")) {
       processedPhoneNumber = `(+84)${phoneNumber}`;
     }
-
-    //console.log("sdt", processedPhoneNumber);
 
     //Kiểm tra số điện thoại
     if (!regexPatterns.phoneNumber.test(processedPhoneNumber)) {
@@ -143,7 +121,7 @@ export const SignUp = () => {
 
     const data = {
       fullName,
-      dateOfBirth: format(dateOfBirth, "dd-MM-yyyy"), // xử lí format ngày bỏ phần đuôiii
+      dateOfBirth, // xử lí format ngày bỏ phần đuôiii
       phoneNumber: processedPhoneNumber,
       email,
       passWord,
@@ -152,25 +130,19 @@ export const SignUp = () => {
       background,
     };
     try {
-      await postRegister(data) // gọi đến api để ktra dữ liệu
-        .then((res) => {
-          console.log(res.data.token);
-          AsyncStorage.setItem("token", res.data.token);
-          handler.setAuth(res.data.userDetail);
-          navigation.navigate("OTPConfirmationForm");
-        })
-
-        .catch((err) => {
-          if (AxiosError.ERR_BAD_REQUEST) {
-            setErrForm(err.response.data.message); 
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => {
-              setErrForm("");
-            }, 3000);
-          }
-        });
-    } catch (error) {
-      console.log(error);
+      const res = await postRegister(data);
+      console.log(res.data.token);
+      AsyncStorage.setItem("token", res.data.token);
+      handler.setAuth(res.data.userDetail);
+      navigation.navigate("OTPConfirmationForm");
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setErrForm(err.response.data.message); 
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+          setErrForm("");
+        }, 3000);
+      }
     }
   };
 
@@ -220,19 +192,25 @@ export const SignUp = () => {
 
       {/* Ngày sinh */}
       <View style={styles.inputView}>
-      <DatePicker
-        selected={dateOfBirth}
-        onChange={handleDateChange}
-        dateFormat="dd/MM/yyyy"
-        placeholderText="Date of Birth"
-        minDate={new Date("1900-01-01")}
-        maxDate={new Date()}
-        showMonthDropdown
-        showYearDropdown
-        dropdownMode="select"
-        style={styles.datePickerStyle}
-        customInput={<TextInput style={styles.inputStyle} />}
-      />
+        <TouchableOpacity
+          onPress={() => setShowPicker(true)}
+          style={styles.inputText}
+        >
+          <Text>{format(dateOfBirth, "dd-MM-yyyy")}</Text>
+        </TouchableOpacity>
+        {showPicker && (
+          <DateTimePicker
+            value={dateOfBirth}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowPicker(false);
+              if (selectedDate) {
+                setDateOfBirth(selectedDate);
+              }
+            }}
+          />
+        )}
         <Text style={styles.errorText}>{errDateOfBirth}</Text>
       </View>
 
@@ -274,37 +252,13 @@ export const SignUp = () => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Text style={styles.errorText}>{ErrForm}</Text>
     </View>
   );
 };
-const datePickerStyle = {
-  //fontFamily: 'Arial, sans-serif',
-  fontStyle: "bold",
-  backgroundColor: "#ced4da",
-};
 
-const inputStyle = {
-  width: "100%",
-  borderRadius: "4px",
-  border: "none",
-  fontSize: "16px",
-  outline: "none",
-  backgroundColor: "#ced4da",
-  fontWeight: "bold",
-  fontStyle: "italic",
-  fontStyle: "bold",
-};
-
-const monthDropdownStyle = {
-  width: "auto",
-  borderRadius: "4px",
-  border: "none",
-  fontSize: "16px",
-  outline: "none",
-  backgroundColor: "#ced4da",
-};
-
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -312,7 +266,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: width,
-    height: height,
   },
   logo: {
     fontWeight: "bold",
@@ -333,8 +286,6 @@ const styles = StyleSheet.create({
     height: 50,
     color: "black",
     fontSize: 15,
-
-    placeholderTextColor: "gray",
     fontWeight: "bold",
     fontStyle: "italic",
   },
@@ -350,7 +301,6 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontWeight: "bold",
-    //fontStyle: "italic",
     color: "white",
   },
   genderLabel: {
@@ -373,7 +323,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff8c00",
   },
   checkboxText: {
-    //color: "#000",
     fontWeight: "bold",
     fontStyle: "italic",
   },
@@ -388,4 +337,5 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 });
+
 export default SignUp;

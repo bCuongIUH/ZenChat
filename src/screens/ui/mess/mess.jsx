@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, Image } from "react-native";
-import { getRoomsMessages, createMessage, acceptFriends, createMessagesFile } from "../../../untills/api";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, Image, Platform ,Linking } from "react-native";
+import { getRoomsMessages, createMessage, acceptFriends, createMessagesFile, deleteMessages } from "../../../untills/api";
 import { SocketContext } from "../../../untills/context/SocketContext";
 import { Ionicons, FontAwesome, Entypo, AntDesign } from "@expo/vector-icons";
 import { AuthContext } from "../../../untills/context/AuthContext";
@@ -9,6 +9,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FilePicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
+import { KeyboardAvoidingView } from 'react-native';
+
 export const Message = ({ route }) => {
   const {
     id,
@@ -46,37 +48,92 @@ export const Message = ({ route }) => {
     FILE: 'file'
 }
 
+useEffect(() => {
+  const RoomMessages = {
+      roomsId: id
+  }
+  getRoomsMessages(RoomMessages)
+      .then((data) => {
+          setMessages(data.data);
+      })
+      .catch((err) => {
+          console.log(err);
+      })
+}, [id])
+useEffect(() => {
+  socket.on('connected', () => console.log('Connected'));
+  socket.on(`createMessage${id}`, messagesSocket => {
+      setMessages(prevMessages => [...prevMessages, messagesSocket.message]);
+      //updateLastMessage(messagesSocket.rooms)
+  })
+  socket.on(`deleteMessage${id}`, (data) => {
+      if (data) {
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const data = await getRoomsMessages({ roomsId: id });
-        setMessages(data.data);
-      } catch (error) {
-        console.log(error);
+          // Loại bỏ tin nhắn bằng cách filter, không cần gói trong mảng mới
+          setMessages(prevMessages => prevMessages.filter(item => item._id !== data.idMessages));
+          //updateLastMessage(data.roomsUpdate);
+
+          // Sử dụng concat hoặc spread operator để thêm messages mới vào
+          setMessages(prevMessages => [...prevMessages, ...data.roomsUpdate.messages]);
       }
-    };
-    fetchMessages();
-  }, [id]);
+  })
+  socket.on(`updatedMessage${id}`, data => {
 
-  useEffect(() => {
-    const handleSocketEvents = () => {
-      socket.on("connected", () => console.log("Connected"));
-      socket.on(id, (messagesSocket) => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          messagesSocket.message,
-        ]);
-      });
-    };
+      if (data) {
+          setMessages(data.messagesCN)
+          // updateLastMessage(data.dataLoading.roomsUpdate)
+      }
+  })// updateRoomFriend(data)
+  socket.on(`acceptFriends${id}`, data => {
+      if (data) {
+          setAreFriends(true);
+          setDisplayMode('friend');
+           //updateRoomFriend(data)
+      }
 
-    handleSocketEvents();
+  })
+  
+  
+  return () => {
+      socket.off('connected');
+      socket.off(`createMessage${id}`);
+      socket.off(`deleteMessage${id}`);
+      socket.off(`updatedMessage${id}`);
+      socket.off(`acceptFriends${id}`);
+  
+  }
+}, [id]);
 
-    return () => {
-      socket.off("connected");
-      socket.off(id);
-    };
-  }, [id, socket]);
+  // useEffect(() => {
+  //   const fetchMessages = async () => {
+  //     try {
+  //       const data = await getRoomsMessages({ roomsId: id });
+  //       setMessages(data.data);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+  //   fetchMessages();
+  // }, [id]);
+
+  // useEffect(() => {
+  //   const handleSocketEvents = () => {
+  //     socket.on("connected", () => console.log("Connected"));
+  //     socket.on(id, (messagesSocket) => {
+  //       setMessages((prevMessages) => [
+  //         ...prevMessages,
+  //         messagesSocket.message,
+  //       ]);
+  //     });
+  //   };
+
+  //   handleSocketEvents();
+
+  //   return () => {
+  //     socket.off("connected");
+  //     socket.off(id);
+  //   };
+  // }, [id, socket]);
 
   const scrollToBottom = () => {
     if (messRef.current) {
@@ -108,26 +165,6 @@ export const Message = ({ route }) => {
   
 
 
-
-//   const pickFile = async () => {
-//     let file = await FilePicker.getDocumentAsync({
-//         // multiple: true,
-//         copyToCacheDirectory: true,
-//         // type
-//     })
-//     if (!result.canceled) {
-//         const base64 = await FileSystem.readAsStringAsync(result.assets[0].uri, {
-//             encoding: FileSystem.EncodingType.Base64,
-//         });
-//         setSendFile([...sendFile, {
-//             base64,
-//             originalname: result.assets[0].name,
-//             uri: result.assets[0].uri,
-//             mimetype: result.assets[0].mimeType,
-//             size: result.assets[0].size
-//         }])
-//     }
-// };
 const pickFile = async () => {
   try {
     const file =  await FilePicker.getDocumentAsync({
@@ -176,102 +213,8 @@ const pickFile = async () => {
 };
 
 
-  // const handleSendMess = () => {
-  //   if (texting === '') {
-  //     Alert.alert("Please enter a message");
-  //     return;
-  //   } else if (!id) {
-  //     Alert.alert("Không thể tìm thấy phòng bạn muốn gửi tin nhắn");
-  //     return;
-  //   } else {
-  //     setIsActive(true);
-  //     if (sendFile && sendFile.length > 0) {
-  //       const formData = new FormData();
-  //       formData.append('file', sendFile[0]);
-  //       createMessagesFile(formData)
-  //       .then((resFile) => {
-  //         const data1 = {
-  //           content: resFile.data,
-  //           roomsID: id,
-  //         };
-  //         createMessage(data1)
-  //         .then((res) => {
-  //           setTexting("");
-  //           setSendFile([]);
-  //           if (res.data.status === 400) {
-  //             Alert.alert("Bạn và người này không còn là bạn nên không thể nhắn tin cho nhau");
-  //             // window.location.reload(); 
-  //           }
-  //           setTimeout(() => {
-  //             setIsActive(false);
-  //           }, 300);
-  //         })
-  //         .catch((err) => {
-  //           if (err.status === 400) {
-  //             Alert.alert("Server error");
-  //             // window.location.reload();
-  //           }
-  //         })
-  //       })
-  //       .catch((err) => {
-  //         console.log(err);
-  //       })
-  //     } else if (sendImage && sendImage.length > 0) {
-  //       const formData1 = new FormData();
-  //       formData1.append('file', sendImage[0]);
-  //       createMessagesFile(formData1)
-  //       .then((resFile) => {
-  //         const data2 = {
-  //           content: resFile.data,
-  //           roomsID: id,
-  //         };
-  //         createMessage(data2)
-  //         .then((res) => {
-  //           setTexting("");
-  //           setSendImage([]);
-  //           if (res.data.status === 400) {
-  //             Alert.alert("You and this person are no longer friends so you cannot message each other");
-  //             // window.location.reload();
-  //           }
-  //           setTimeout(() => {
-  //             setIsActive(false);
-  //           }, 300);
-  //         })
-  //         .catch((err) => {
-  //           if (err.status === 400) {
-  //             Alert.alert("Server error");
-  //             // window.location.reload();
-  //           }
-  //         })
-  //       })
-  //       .catch((err) => {
-  //         console.log(err);
-  //       })
-  //     } else {
-  //       const data = {
-  //         content: texting,
-  //         roomsID: id,
-  //       };
-  //       createMessage(data)
-  //       .then((res) => {
-  //         setTexting("");
-  //         if (res.data.status === 400) {
-  //           Alert.alert("You and this person are no longer friends so you cannot message each other");
-  //           // window.location.reload();
-  //         }
-  //         setTimeout(() => {
-  //           setIsActive(false);
-  //         }, 300);
-  //       })
-  //       .catch((err) => {
-  //         if (err.status === 400) {
-  //           Alert.alert("Server error");
-  //           // window.location.reload();
-  //         }
-  //       })
-  //     }
-  //   }
-  // };
+  
+  
   const handleSendMess = () => {
     if (texting === '') {
       Alert.alert("Please enter a message");
@@ -281,68 +224,103 @@ const pickFile = async () => {
       return;
     } else {
       setIsActive(true);
-      if (sendFile && sendFile.length > 0) {
+      if (sendFile.length > 0) {
         const formData = new FormData();
-        // Thêm thông tin về file vào formData
-        sendFile.forEach(file => {
-          formData.append('files', {
-            uri: file.uri,
-            type: file.mimetype,
-            name: file.originalname,
-          });
-        });
+        formData.append('file', sendFile[0].file);
+
+
         createMessagesFile(formData)
-        .then((resFile) => {
-          const data1 = {
-            content: resFile.data,
-            roomsID: id,
-          };
-          createMessage(data1)
-          .then((res) => {
-            setTexting("");
-            setSendFile([]);
-            if (res.data.status === 400) {
-              Alert.alert("Bạn và người này không còn là bạn nên không thể nhắn tin cho nhau");
-            }
-            setTimeout(() => {
-              setIsActive(false);
-            }, 300);
+          .then((resFile) => {
+            const data1 = {
+              content: resFile.data,
+              roomsID: id,
+            };
+            createMessage(data1)
+              .then((res) => {
+                setTexting("");
+                setSendFile([]);
+                if (res.data.status === 400) {
+                  Alert.alert("Bạn và người này không còn là bạn nên không thể nhắn tin cho nhau");
+                }
+                setTimeout(() => {
+                  setIsActive(false);
+                }, 300);
+              })
+              .catch((err) => {
+                if (err.status === 400) {
+                  Alert.alert("Server error");
+                }
+              });
           })
           .catch((err) => {
-            if (err.status === 400) {
-              Alert.alert("Server error");
-            }
+            console.log(err);
           });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-      } else {
-        // Xử lý gửi tin nhắn văn bản khi không có file được chọn
+      } else if (sendImage.length > 0) {
+        const formData1 = new FormData();
+        formData1.append('file', sendImage[0].file);
+
+        createMessagesFile(formData1)
+          .then((resFile) => {
+
+            const data2 = {
+              content: resFile.data,
+              roomsID: id,
+            };
+            createMessage(data2)
+              .then((res) => {
+                setTexting("");
+                setSendImage([]);
+                if (res.data.status === 400) {
+                  Alert.alert("You and this person are no longer friends so you cannot message each other");
+
+                }
+                setTimeout(() => {
+                  setIsActive(false); // Tắt hiệu ứng sau một khoảng thời gian
+                }, 300);
+                //console.log(res.data);
+              })
+              .catch((err) => {
+                if (err.status === 400) {
+                  Alert.alert("Server error");
+
+                }
+
+
+              })
+          })
+          .catch((err) => {
+            console.log(err);
+          })
+      }
+      else {
         const data = {
           content: texting,
           roomsID: id,
         };
         createMessage(data)
-        .then((res) => {
-          setTexting("");
-          if (res.data.status === 400) {
-            Alert.alert("You and this person are no longer friends so you cannot message each other");
-          }
-          setTimeout(() => {
-            setIsActive(false);
-          }, 300);
-        })
-        .catch((err) => {
-          if (err.status === 400) {
-            Alert.alert("Server error");
-          }
-        });
+          .then((res) => {
+            setTexting("");
+            if (res.data.status === 400) {
+              Alert.alert("Hiện tại bạn và người này không còn là bạn nên không thể nhắn tin với nhau")
+
+            }
+            setTimeout(() => {
+              setIsActive(false); // Tắt hiệu ứng sau một khoảng thời gian
+            }, 300);
+            //console.log(res.data);
+          })
+          .catch((err) => {
+            if (err.status === 400) {
+              Alert.alert("Lỗi Server")
+
+            }
+
+
+          })
       }
     }
   };
-  
-  
+
 
 
 let settime = null;
@@ -363,31 +341,31 @@ useEffect(() => {
 }, [clickedMessage]);
 const SendToMesageImage = (mm) => {
   if (mm.endsWith('.jpg') || mm.endsWith('.png') || mm.endsWith('.jpeg') || mm.endsWith('.gif') || mm.endsWith('.tiff') || mm.endsWith('.jpe') || mm.endsWith('.jxr') || mm.endsWith('.tif') || mm.endsWith('.bmp')) {
-      return <Image source={{ uri: mm }} style={{ maxWidth: 300, maxHeight: 300 }} />;
+      return <Image source={{ uri: mm }} style={{ width: 300, height: 300 }} />;
   }
   else if (mm.endsWith('.docx')) {
       return (
           <TouchableOpacity onPress={() => Linking.openURL(mm)}>
-              <Image source={{ uri: 'https://th.bing.com/th/id/OIP.wXXoI-2mkMaF3nkllBeBngHaHa?rs=1&pid=ImgDetMain' }} style={{ maxWidth: 130, maxHeight: 130 }} />
+              <Image source={{ uri: 'https://th.bing.com/th/id/OIP.wXXoI-2mkMaF3nkllBeBngHaHa?rs=1&pid=ImgDetMain' }} style={{ width: 80, height: 80 }} />
           </TouchableOpacity>
       );
   }
   else if (mm.endsWith('.pdf')) {
       return (
           <TouchableOpacity onPress={() => Linking.openURL(mm)}>
-              <Image source={{ uri: 'https://th.bing.com/th/id/R.a6b7fec122cb402ce39d631cf74730b9?rik=2%2b0lI34dy%2f%2fUqw&riu=http%3a%2f%2fpluspng.com%2fimg-png%2fpdf-logo-png-pdf-icon-png-image-with-transparent-background-toppng-840x859.png&ehk=%2b7EAx%2fH1qN3X6H5dYm9qBGAKiqXiHRhEFmrPSIjFK5o%3d&risl=&pid=ImgRaw&r=0' }} style={{ maxWidth: 130, maxHeight: 130 }} />
+              <Image source={{ uri: 'https://th.bing.com/th/id/R.a6b7fec122cb402ce39d631cf74730b9?rik=2%2b0lI34dy%2f%2fUqw&riu=http%3a%2f%2fpluspng.com%2fimg-png%2fpdf-logo-png-pdf-icon-png-image-with-transparent-background-toppng-840x859.png&ehk=%2b7EAx%2fH1qN3X6H5dYm9qBGAKiqXiHRhEFmrPSIjFK5o%3d&risl=&pid=ImgRaw&r=0' }} style={{ width: 80, height: 80 }} />
           </TouchableOpacity>
       );
   }
   else if (mm.endsWith('.rar')) {
       return (
           <TouchableOpacity onPress={() => Linking.openURL(mm)}>
-              <Image source={{ uri: 'https://vsudo.net/blog/wp-content/uploads/2019/05/winrar-768x649.jpg' }} style={{ maxWidth: 130, maxHeight: 130 }} />
+              <Image source={{ uri: 'https://vsudo.net/blog/wp-content/uploads/2019/05/winrar-768x649.jpg' }} style={{ width: 80, height: 80}} />
           </TouchableOpacity>
       );
   }
   else if (mm.endsWith('.mp4')) {
-      return <Video source={{ uri: mm }} style={{ maxWidth: 300, maxHeight: 300 }} />;
+      return <Video source={{ uri: mm }} style={{ width: 300, height: 300 }} />;
   }
   else {
       return <Text>{mm}</Text>;
@@ -398,17 +376,32 @@ const SendToMesageImage = (mm) => {
   const [requestSent, setRequestSent] = useState(false);
 
   const handleEditMessage = () => {
-    // Xử lý khi nhấn nút chỉnh sửa tin nhắn
-    // Ví dụ:
-    console.log("Chỉnh sửa tin nhắn:", messages[selectedMessageIndex]);
+  
     setShowOptions(false); // Đóng options sau khi thực hiện hành động
   };
 
   const handleDeleteMessage = () => {
     // Xử lý khi nhấn nút xóa tin nhắn
     // Ví dụ:
-    
-    console.log("Xóa tin nhắn:", messages[selectedMessageIndex]);
+    const idLastMess = messages.slice(-1)[0]
+    const dataDeleteMessages = {
+      idMessages: messages[selectedMessageIndex]._id,
+      idLastMessageSent: idLastMess._id,
+      email: user.email
+    }
+    deleteMessages(id, dataDeleteMessages)
+      .then((res) => {
+        if (res.data.response === "Bạn không phải là chủ tin nhắn") {
+          alert("Bạn không phải chủ tin nhắn nên không thể xóa")
+        }
+        if (res.status !== 200) {
+          alert("Không thể xóa được tin nhắn")
+          return;
+        }
+      })
+      .catch((err) => {
+        alert("Lỗi hệ thống")
+      });
     setShowOptions(false); // Đóng options sau khi thực hiện hành động
   };
 
@@ -434,6 +427,7 @@ const SendToMesageImage = (mm) => {
    
 
     useEffect(() => {
+      console.log(friend);
       // Xác định trạng thái hiển thị dựa trên các điều kiện
       if (friend === true) {
         setDisplayMode("friend");
@@ -498,6 +492,7 @@ const SendToMesageImage = (mm) => {
               }}
             >
               <Text style={{ color: "#fff" }}>Chấp nhận lời mời kết bạn</Text>
+              
             </TouchableOpacity>
           );
         default:
@@ -532,115 +527,169 @@ const SendToMesageImage = (mm) => {
           alert("Lỗi hệ thống")
       })
   };
+  const handleFileChangeImage = async () => {
+    try {
+      const file = await FilePicker.getDocumentAsync({
+        // multiple: true,
+        copyToCacheDirectory: true,
+        // type
+      })
+      // console.log(file.assets[0])
 
- 
+      setTexting(file.assets[0].name)
+      setSendImage(file.assets)
+    } catch (error) {
+      console.error('Lỗi khi chọn file:', error);
+    }
+  };
+  const handleFileChange = async () => {
+    try {
+      const file = await FilePicker.getDocumentAsync({
+        // multiple: true,
+        copyToCacheDirectory: true,
+        // type
+      })
+      // console.log(file.assets[0])
+
+      setTexting(file.assets[0].name)
+      setSendFile(file.assets)
+    } catch (error) {
+      console.error('Lỗi khi chọn file:', error);
+    }
+  };
+  const messageRemoved = (content) => {
+    if (content === "") {
+      return "Tin nhắn đã được thu hồi"
+    }
+    else {
+      return content;
+    }
+  }
+
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => nav.goBack()}
-          style={styles.goBackButton}
-        >
-          <AntDesign name="arrowleft" size={24} color="black" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.fullName}>{fullName}</Text>
-          {friend ? (
-            <Text style={[styles.friendStatus, styles.italic]}>Bạn bè</Text>
-          ) : (
-            <Text style={[styles.strangerStatus, styles.italic]}>Người lạ</Text>
-          )}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => nav.goBack()}
+            style={styles.goBackButton}
+          >
+            <AntDesign name="arrowleft" size={24} color="black" />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <Text style={styles.fullName}>{fullName}</Text>
+            {friend ? (
+              <Text style={[styles.friendStatus, styles.italic]}>Bạn bè</Text>
+            ) : (
+              <Text style={[styles.strangerStatus, styles.italic]}>Người lạ</Text>
+            )}
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.headerButton}>
+              <Ionicons name="call" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerButton}>
+              <FontAwesome name="video-camera" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerButton}>
+              <Entypo name="menu" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerButton}>
-            <Ionicons name="call" size={24} color="black" />
+
+        {/* Phần hiển thị thông tin và chức năng kết bạn */}
+        {renderDisplay()}
+
+        <ScrollView ref={messRef} style={styles.messageContent}>
+          {/* Hiển thị tin nhắn */}
+          {messages.map((message, index) => (
+            <View
+              key={index}
+              style={[
+                styles.message,
+                message.author.email === user.email
+                  ? styles.messageAuthor
+                  : styles.messageReceiver,
+              ]}
+            >
+              {/* Avatar của người gửi tin nhắn */}
+              {message.author.email !== user.email && (
+                <View style={styles.avatarContainer}>
+                  <Image
+                    source={{ uri: message.author.avatar }}
+                    style={styles.avatar}
+                  />
+                </View>
+              )}
+              {/* Nội dung tin nhắn */}
+              <View style={styles.messageTextContainer}>
+                <View style={styles.messageOptions}>
+                  {/* Nút hiển thị menu options */}
+                  {message.author.email === user.email && (
+                    <TouchableOpacity
+                      onPress={() => handleShowOptions(index)}
+                      style={styles.optionsButton}
+                    >
+                      <Entypo
+                        name="dots-three-vertical"
+                        size={16}
+                        color="silver"
+                      />
+                    </TouchableOpacity>
+                  )}
+                  {/* Hiển thị menu options */}
+                  {showOptions && selectedMessageIndex === index && (
+                    <View style={styles.messageOptions}>
+                      {/* Nút chỉnh sửa */}
+                      <TouchableOpacity
+                        style={[styles.optionButton, styles.editOption]}
+                        onPress={handleEditMessage}
+                      >
+                        <Text style={styles.optionTextChinhSua}>Chỉnh sửa</Text>
+                      </TouchableOpacity>
+                      {/* Nút xóa */}
+                      <TouchableOpacity
+                        style={[styles.optionButton, styles.deleteOption]}
+                        onPress={handleDeleteMessage}
+                      >
+                        <Text style={styles.optionTextXoa}>Xóa</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+                {/* Hiển thị nội dung của tin nhắn */}
+                <Text style={styles.messageText}>{SendToMesageImage(messageRemoved(message.content))}</Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* Phần input tin nhắn */}
+        <View style={styles.inputSection}>
+          <TextInput
+            style={styles.input}
+            placeholder="Tin nhắn..."
+            value={texting}
+            onChangeText={handleTexting}
+          />
+          {/* Các nút hoặc chức năng khác */}
+          <TouchableOpacity style={styles.fileButton} onPress={handleFileChange}>
+            <Ionicons name="document-attach-outline" size={24} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
-            <FontAwesome name="video-camera" size={24} color="black" />
+          <TouchableOpacity style={styles.fileButton} onPress={handleFileChangeImage}>
+            <Ionicons name="image" size={24} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
-            <Entypo name="menu" size={24} color="black" />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSendMess}>
+            <Ionicons name="send" size={24} color="white" />
           </TouchableOpacity>
         </View>
       </View>
-
-      {renderDisplay()}
-
-      <ScrollView ref={messRef} style={styles.messageContent}>
-        {messages.map((message, index) => (
-          <View
-            key={index}
-            style={[
-              styles.message,
-              message.author.email === user.email
-                ? styles.messageAuthor
-                : styles.messageReceiver,
-            ]}
-          >
-            {message.author.email !== user.email && (
-              <View style={styles.avatarContainer}>
-                <Image
-                  source={{ uri: message.author.avatar }}
-                  style={styles.avatar}
-                />
-              </View>
-            )}
-            <View style={styles.messageTextContainer}>
-              <View style={styles.messageOptions}>
-                {message.author.email === user.email && (
-                  <TouchableOpacity
-                    onPress={() => handleShowOptions(index)}
-                    style={styles.optionsButton}
-                  >
-                    <Entypo
-                      name="dots-three-vertical"
-                      size={16}
-                      color="silver"
-                    />
-                  </TouchableOpacity>
-                )}
-                {showOptions && selectedMessageIndex === index && (
-                  <View style={styles.messageOptions}>
-                    <TouchableOpacity
-                      style={[styles.optionButton, styles.editOption]}
-                      onPress={handleEditMessage}
-                    >
-                      <Text style={styles.optionTextChinhSua}>Chỉnh sửa</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.optionButton, styles.deleteOption]}
-                      onPress={handleDeleteMessage}
-                    >
-                      <Text style={styles.optionTextXoa}>Xóa</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.messageText}>{message.content}</Text>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-
-      <View style={styles.inputSection}>
-    <TextInput
-        style={styles.input}
-        placeholder="Tin nhắn..."
-        value={texting}
-        onChangeText={handleTexting}
-    />
-   <TouchableOpacity style={styles.fileButton} onPress={pickFile}>
-        <Ionicons name="document-attach-outline" size={24} color="black" />
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.fileButton} onPress={pickFile}>
-        <Ionicons name="image" size={24} color="black" />
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.sendButton} onPress={handleSendMess}>
-        <Ionicons name="send" size={24} color="white" />
-    </TouchableOpacity>
-</View>
-
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -727,8 +776,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   messageTextContainer: {
-    flex: 1,
-    justifyContent: "center",
+    maxWidth: '60%', // Hạn chế chiều rộng tối đa của tin nhắn của đối phương
   },
   messageText: {
     color: "#fff",
@@ -740,7 +788,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#ccc",
     padding: 10,
-    borderRadius :10
+    borderRadius: 10,
+    //marginTop: 50, // Thêm margin top để nâng cao phần input
   },
   input: {
     flex: 1,

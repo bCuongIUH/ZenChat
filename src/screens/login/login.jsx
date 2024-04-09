@@ -12,11 +12,10 @@ import { getCookieExist, postLogin } from "../../untills/api";
 import { Dimensions } from "react-native";
 
 const Login = () => {
-  const thongbao = useRef(null);
-  const [username, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  const [showError, setShowError] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     getCookieExist()
@@ -32,8 +31,7 @@ const Login = () => {
       });
   }, []);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     const data = {
       username,
       password,
@@ -46,7 +44,7 @@ const Login = () => {
     } catch (error) {
       // Xử lý lỗi
       if (error.response && error.response.status === 401) {
-        setShowError("Sai tài khoản hoặc mật khẩu!"); // Hiển thị thông báo lỗi
+        setError("Sai tài khoản hoặc mật khẩu!"); // Hiển thị thông báo lỗi
       } else {
         console.log("Lỗi khác", error);
       }
@@ -65,9 +63,8 @@ const Login = () => {
           placeholder="Email"
           placeholderTextColor="gray"
           value={username}
-          onChange={(e) => setEmail(e.target.value)}
+          onChangeText={(text) => setUsername(text)}
         />
-        {showError && <Text style={styles.errorMessage}>{showError}</Text>}
       </View>
       <Text style={styles.textIv}>Mật Khẩu</Text>
       <View style={styles.inputView}>
@@ -77,15 +74,15 @@ const Login = () => {
           placeholderTextColor="gray"
           secureTextEntry
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChangeText={(text) => setPassword(text)}
         />
       </View>
+      {error !== "" && <Text style={styles.errorMessage}>{error}</Text>}
       <TouchableOpacity
         onPress={() => navigation.navigate("ForgotPasswordScreen")}
       >
         <Text style={styles.forgot}>Quên mật khẩu ?</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
         <Text style={styles.loginText}>Đăng Nhập</Text>
       </TouchableOpacity>
