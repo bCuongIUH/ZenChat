@@ -33,9 +33,10 @@ const ItemSetting = () => {
       .then((res) => {
         removeCookie();
         window.location.href = "Login";
-        // navigation.navigate("Login")
+        //navigation.navigate("Login")
       })
       .catch((err) => {
+    
         console.log("lỗi");
       });
   };

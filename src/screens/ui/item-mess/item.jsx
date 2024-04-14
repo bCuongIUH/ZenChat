@@ -1,138 +1,107 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { AuthContext } from '../../../untills/context/AuthContext';
-import { deleteRooms, unFriends } from '../../../untills/api'
+import React, { useState, useContext, useEffect } from 'react'
+import { View, Text, TouchableOpacity } from 'react-native';
+import { AuthContext } from '../../untills/context/AuthContext'
+import { deleteRooms, unFriends, acceptFriends, undoFriends } from '../../untills/api'
+import { SocketContext } from '../../untills/context/SocketContext';
 
-const Item = ({ link, name, action, time, tt, delele, roomsDelete, onClick }) => {
-  const [mouse, setMouse] = useState(false);
-  const [btnForm, setBtnForm] = useState(false);
-  const { user } = useContext(AuthContext);
+const Item = ({ link, name, action, time, tt, delele, roomsDelete, onClick, idd }) => {
+    const [undo, setUndo] = useState('Undo');
+    const { user } = useContext(AuthContext);
+    const socket = useContext(SocketContext);
 
-  const handleLeave = () => {
-    setMouse(false);
-    setBtnForm(false);
-  };
+    useEffect(() => {
+        // Cập nhật trạng thái nút action (Undo, Accept, Unfriend)
+        const updateButtonState = () => {
+            if (user.sendFriend.some(item => item._id === idd)) {
+                setUndo('Undo');
+            } else if (user.waitAccept.some(item => item._id === idd)) {
+                setUndo('Accept');
+            } else {
+                setUndo('Unfriend');
+            }
+        };
 
-  const mouseEntry = (mm) => {
-    setMouse(mm);
-  };
+        // Lắng nghe sự kiện cập nhật gửi lời mời kết bạn
+        const updateSentFriendListener = (data) => {
+            if (data.reload) {
+                setUndo('Undo');
+            } else {
+                setUndo('Accept');
+            }
+        };
 
-  const handleBtn = () => {
-    setBtnForm(true);
-  };
+        // Lắng nghe sự kiện cập nhật hủy kết bạn
+        const updateUnfriendListener = (roomsU) => {
+            if (roomsU) {
+                setUndo('Unfriend');
+            }
+        };
 
-  const handleDelete = () => {
-    const idP = {
-      idRooms: roomsDelete._id,
-    };
-    const userAction = {
-      id: user._id,
-    };
+        // Lắng nghe sự kiện từ server
+        socket.on('connected', () => console.log('Connected'));
+        socket.on(`sendfriends${user.email}`, updateSentFriendListener);
+        socket.on(`updateSendedFriend${roomsDelete._id}${user.email}`, updateUnfriendListener);
 
-    deleteRooms(userAction.id, idP.idRooms)
-      .then((res) => {
-        if (user.email === roomsDelete.creator.email) {
-          const userReciever1 = { id: roomsDelete.recipient._id };
-          unFriends(userReciever1.id, user._id)
-            .then((resUser) => {
-              if (resUser.data.emailUserActions) {
-                alert('Hủy kết bạn thành công');
-              } else {
-                alert('Hủy kết bạn không thành công');
-              }
+        // Clean up: ngừng lắng nghe khi component unmount
+        return () => {
+            socket.off('connected');
+            socket.off(`sendfriends${user.email}`, updateSentFriendListener);
+            socket.off(`updateSendedFriend${roomsDelete._id}${user.email}`, updateUnfriendListener);
+        };
+    }, []);
+
+    // Hàm xử lý hành động Unfriend
+    const handleUnfriend = () => {
+        const idP = {
+            idRooms: roomsDelete._id,
+        };
+        const userAction = {
+            id: user._id,
+        };
+
+        deleteRooms(userAction.id, idP.idRooms)
+            .then((res) => {
+                let userRecieverId;
+                if (user.email === roomsDelete.creator.email) {
+                    userRecieverId = roomsDelete.recipient._id;
+                } else {
+                    userRecieverId = roomsDelete.creator._id;
+                }
+
+                unFriends(userRecieverId, idP)
+                    .then((resUser) => {
+                        if (resUser.data.emailUserActions) {
+                            alert('Hủy kết bạn thành công');
+                        } else {
+                            alert('Hủy kết bạn không thành công');
+                        }
+                    })
+                    .catch((error) => {
+                        alert('Lỗi Server');
+                    });
             })
-            .catch((error) => {
-              alert('Lỗi Server');
+            .catch((err) => {
+                alert('Lỗi hủy phòng');
             });
-        } else {
-          const userReciever2 = { id: roomsDelete.creator._id };
-          console.log('Rơi xuống trường hợp 2');
-          unFriends(userReciever2.id, user._id)
-            .then((resUser) => {
-              if (resUser.data.emailUserActions) {
-                alert('Hủy kết bạn thành công');
-              } else {
-                alert('Hủy kết bạn không thành công');
-              }
-            })
-            .catch((error) => {
-              alert('Lỗi Server');
-            });
-        }
-      })
-      .catch((err) => {
-        alert('Lỗi hủy phòng');
-      });
-  };
+    };
 
-  return (
-    <TouchableOpacity
-      style={[styles.item, { backgroundColor: mouse ? 'rgb(227, 222, 222)' : 'white' }]}
-      onPress={onClick}
-      onPressIn={() => mouseEntry(true)}
-      onPressOut={() => handleLeave(false)}
-    >
-      <View style={styles.itemName}>
-        <Image source={{ uri: link }} style={{ width: 50, height: 50, borderRadius: 25 }} />
-        <View style={styles.name}>
-          <Text style={styles.messName}>{name}</Text>
-          <Text style={styles.messInfo}>{tt}{action}</Text>
-        </View>
-      </View>
-      <Text>{mouse ? <Text onPress={handleBtn}>...</Text> : time}</Text>
-      {btnForm && (
-        <View style={{ position: 'absolute', display: 'flex', flexDirection: 'column', right: 0, justifyContent: 'center', zIndex: 50, marginTop: 22 }}>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-          >
-            <Text style={{ color: '#fff', fontSize: 14 }}>Unfriend</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+    return (
+        <TouchableOpacity style={{ position: 'relative' }} onPress={onClick}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Image source={{ uri: link }} style={{ width: 50, height: 50, borderRadius: 25 }} />
+                <View style={{ marginLeft: 10 }}>
+                    <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{name}</Text>
+                    <Text>{tt}{action}</Text>
+                </View>
+            </View>
+            <Text>{time}</Text>
+            {undo === 'Unfriend' && (
+                <TouchableOpacity onPress={handleUnfriend} style={{ backgroundColor: 'red', borderRadius: 5, padding: 8, marginTop: 5 }}>
+                    <Text style={{ color: 'white' }}>Unfriend</Text>
+                </TouchableOpacity>
+            )}
+        </TouchableOpacity>
+    );
 };
-
-const styles = StyleSheet.create({
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#f9f9f9',
-    justifyContent: 'space-between',
-  },
-  itemName: {
-    flexDirection: 'row',
-  },
-  name: {
-    marginLeft: 10,
-    paddingLeft: 20,
-  },
-  messName: {
-    fontSize: 20,
-    paddingBottom: 5,
-  },
-  messInfo: {
-    fontSize: 15,
-    color: 'gray',
-  },
-  deleteButton: {
-    backgroundColor: 'red',
-    borderRadius: 5,
-    padding: 8,
-    marginBottom: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    elevation: 2,
-  },
-});
 
 export default Item;

@@ -9,35 +9,41 @@ import {
   Modal,
   Text,
   StatusBar,
-  TouchableWithoutFeedback,
   FlatList,
   Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
-import { getListRooms, createRooms } from "../../untills/api";
+import { getListRooms, getListGroups, deleteRooms } from "../../untills/api";
 import { AuthContext } from "../../untills/context/AuthContext";
 import { SocketContext } from "../../untills/context/SocketContext";
 
+// Import ItemGroup component if needed
+import ItemGroup from "./item-mess-group/ItemGroup";
+
 export const Chatpage = ({ route }) => {
   const { user } = useContext(AuthContext);
-
   const nav = useNavigation();
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isActionModalVisible, setActionModalVisible] = useState(false);
+  const [isFriendActionModalVisible, setFriendActionModalVisible] =
+    useState(false);
   const [todoList, setTodoList] = useState([]);
   const [filteredTodoList, setFilteredTodoList] = useState([]);
-
   const [searchStarted, setSearchStarted] = useState(false);
   const [roomInfo, setRoomInfo] = useState(null);
   const [addedUsers, setAddedUsers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const socket = useContext(SocketContext);
-  
-  // const roomId =
-  //   route.params && route.params.roomId ? route.params.roomId : null;
+  const [isFriend, setIsFriend] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [groups, setGroups] = useState([]);
+  const [idGroups, setIdGroups] = useState();
+  const [friendCreateGroup, setFriendCreateGroup] = useState([]);
+  const [createdGroup, setCreatedGroup] = useState(null);
+  const [isChatSingle, setIsChatSingle] = useState(true); // State to manage chat type
 
   const handleSearchIconPress = () => {
     setSearchStarted(false);
@@ -53,15 +59,20 @@ export const Chatpage = ({ route }) => {
     nav.navigate("ItemAddFriend");
   };
 
+  const handleCreateChatGroup = () => {
+    setActionModalVisible(false);
+    nav.navigate("ItemAddGroup");
+  };
+
   const handleModalClose = () => {
     setActionModalVisible(false);
+    setFriendActionModalVisible(false);
   };
 
   const handleMainScreenPress = () => {
     setIsSearching(false);
   };
 
-  
   const getDisplayUser = (room) => {
     if (!room || !room.creator) {
       return;
@@ -69,6 +80,7 @@ export const Chatpage = ({ route }) => {
       return room.creator._id === user?._id ? room.recipient : room.creator;
     }
   };
+
   useEffect(() => {
     const fetchData = async () => {
       getListRooms()
@@ -77,26 +89,91 @@ export const Chatpage = ({ route }) => {
         })
         .catch((err) => {
           console.log(err);
-          console.log("Error occurred while fetching data");
+          console.log("lỗi rồi bạn ơii");
         });
     };
     fetchData();
   }, []);
 
-//
-const friend = (userId) => {
-  // Kiểm tra xem userId có trong danh sách bạn bè của người dùng không
-  return user.friends.some((friend) => friend._id === userId);
-};
+  useEffect(() => {
+    if (route && route.params && route.params.createdGroup) {
+      setCreatedGroup(route.params.createdGroup);
+    }
+  }, [route]);
 
-  const handleTodoItemPress = (item) => {
+  useEffect(() => {
+    if (createdGroup) {
+      console.log("Thông tin nhóm:", createdGroup);
+    }
+  }, [createdGroup]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      getListGroups()
+        .then((res) => {
+          setGroups(res.data);
+        })
+        .catch((err) => {
+          console.log(err);
+          console.log("Đã rơi zô đây");
+        });
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getListGroups();
+        setGroups(response.data);
+      } catch (error) {
+        console.error("Error fetching groups:", error);
+      }
+    };
+    fetchData();
+  }, []);
+  const getDisplayGroup = (group) => {
+    if (!group || !group.creator) {
+      return;
+    } else {
+      return group.creator._id === user?._id ? group.recipient : group.creator;
+    }
+  };
+  
+  // const handleGroupPress = (item) => {
+  //   // Thực hiện điều hướng sang màn hình mess và truyền thông tin nhóm qua route params
+  //   nav.navigate("MessageGroup", {
+  //     id: item._id, // ID của nhóm
+  //     avatar: item.avtGroups, // Avatar của nhóm
+  //     nameRoom: item.nameGroups, // Tên của nhóm
+  //     // Các thông tin khác của nhóm có thể truyền tại đây
+  //   });
+  // };
+
+  const handleGroupPress = (item) => {
+    // Thực hiện điều hướng sang màn hình mess và truyền thông tin nhóm qua route params
+    nav.navigate("MessageGroup", {
+      groupID: item._id, // ID của nhóm
+      avatar: item.avtGroups, // Avatar của nhóm
+      nameRoom: item.nameGroups,
+      nameGroups: item.nameGroups, // Tên của nhóm
+      // Các thông tin khác của nhóm có thể truyền tại đây
+    });
+  };
+  
+  
+  const friend = (userId) => {
+    return user.friends.some((friend) => friend._id === userId);
+  };
+
+   const handleTodoItemPress = (item) => {
     const existingRoom = rooms.find((room) => {
       return (
         (room.creator._id === user._id && room.recipient._id === item._id) ||
         (room.creator._id === item._id && room.recipient._id === user._id)
       );
     });
-  
+
     let roomName;
     if (existingRoom) {
       roomName = existingRoom.fullName;
@@ -107,7 +184,7 @@ const friend = (userId) => {
           ? `${item.fullName} - ${user.fullName}`
           : `${user.fullName} - ${item.fullName}`;
     }
-  
+
     if (existingRoom) {
               // console.log(getDisplayUser(existingRoom))
               nav.navigate("Message", {
@@ -123,22 +200,41 @@ const friend = (userId) => {
                 phoneNumber: getDisplayUser(existingRoom).phoneNumber,
                 dateOfBirth: getDisplayUser(existingRoom).dateOfBirth,
 
-
-                //recipient: existingRoom.recipient.sended, 
-                sender: existingRoom.creator.sended, 
+                //recipient: existingRoom.recipient.sended,
+                sender: existingRoom.creator.sended,
                 idAccept: getDisplayUser(existingRoom)._id,
                 receiver: existingRoom.recipient.sended,
                 recipient : getDisplayUser(existingRoom).sended,
 
-
-
-
                 friend: friend(item._id)
+
               });
-    } 
+              //console.log(existingRoom._id);
+
+              // handleUnfriend(existingRoom)
+    }
 
   };
-  
+
+  socket.on("connected", () => console.log("Connected"));
+  socket.on(user?.email, (roomSocket) => {
+    setRooms((prevRooms) => [...prevRooms, roomSocket]);
+  });
+
+  function handleMoreOptionsPress(user) {
+    setSelectedUser(user);
+    setIsFriend(friend(user._id));
+    setFriendActionModalVisible(true);
+  }
+
+  const handleUnfriend = (existingRoom) => {
+    // Your code to handle unfriending
+  };
+
+  const handleAcceptFriendRequest = (user) => {
+    console.log("chấp nhận kết bạn thành công:", user);
+  };
+
   useEffect(() => {
     if (searchStarted || searchText === "") {
       if (searchText === "") {
@@ -151,90 +247,80 @@ const friend = (userId) => {
       }
     }
   }, [searchStarted, searchText, todoList]);
- 
+
   useEffect(() => {
     socket.on("connected", () => console.log("Connected"));
     socket.on(user.email, (roomSocket) => {
       setRooms((prevRooms) => [...prevRooms, roomSocket]);
     });
-    // socket.on(user.email, (roomSocket) => {
-    //   updateListRooms(roomSocket.rooms);
-    // });
+    socket.on(user.email, (roomSocket) => {
+      updateListRooms(roomSocket.rooms);
+    });
 
     return () => {
       socket.off("connected");
       socket.off(user.email);
-      //socket.off(user.email);
     };
   }, []);
 
   useEffect(() => {
-    // Lắng nghe sự kiện socket khi một phòng mới được tạo
     socket.on("newRoomCreated", (newRoom) => {
       setRooms((prevRooms) => [...prevRooms, newRoom]);
     });
 
     return () => {
-      // Ngắt kết nối socket khi component unmounts
       socket.off("newRoomCreated");
     };
   }, [socket]);
+  const [selectedFunction, setSelectedFunction] = useState("personal");
 
-  //
-  useEffect(() => {
-    const fetchData = async () => {
-      getListRooms()
-        .then((res) => {
-          // const filteredRooms = res.data.filter(room => room.lastMessageSent);
 
-          // Chỉ setRooms với các object đã được lọc
-          setRooms(res.data);
-        })
-        .catch((err) => {
-          console.log(err);
-          console.log("Đã rơi zô đây");
-        });
-    };
-    fetchData();
-  }, []);
+
+groups.forEach((group) => {
+  console.log('Group ID:', group._id); // Lấy ID của nhóm
+  console.log('Group Avatar:', group.avtGroups); // Lấy đường dẫn avatar của nhóm
+  console.log('Group Name:', group.nameGroups); // Lấy tên của nhóm
+ 
+});
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.searchBarContainer}>
+        <TouchableOpacity onPress={handleSearchIconPress}>
           {isSearching ? (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Nhập từ khóa tìm kiếm"
-              placeholderTextColor="gray"
-              value={searchText}
-              onChangeText={(text) => {
-                setSearchStarted(true);
-                setSearchText(text);
-              }}
-              focusable={false}
+            <AntDesign name="closecircleo" size={24} color="black" />
+          ) : (
+            <Ionicons
+              style={styles.searchIcon}
+              name="search"
+              size={24}
+              color="black"
             />
-          ) : null}
-          <TouchableOpacity onPress={handleSearchIconPress}>
-            {isSearching ? (
-              <AntDesign name="closecircleo" size={24} color="black" />
-            ) : (
-              <Ionicons
-                style={styles.searchIcon}
-                name="search"
-                size={24}
-                color="black"
-              />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleAddFriendPress}
-            style={styles.addFriendButton}
-          >
-            <Ionicons name="add" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleAddFriendPress}>
+          <Ionicons name="add" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            selectedFunction === "personal" && styles.selectedButton,
+          ]}
+          onPress={() => setSelectedFunction("personal")}
+        >
+          <Text style={styles.buttonText}>Chat Đơn</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            selectedFunction === "group" && styles.selectedButton,
+          ]}
+          onPress={() => setSelectedFunction("group")}
+        >
+          <Text style={styles.buttonText}>Chat Nhóm</Text>
+        </TouchableOpacity>
       </View>
 
       <Modal
@@ -253,6 +339,12 @@ const friend = (userId) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalbtn}
+              onPress={handleCreateChatGroup}
+            >
+              <Text style={styles.modalOption}>Tạo Nhóm </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalbtn}
               onPress={handleModalClose}
             >
               <Text style={styles.modalOption}>Hủy</Text>
@@ -261,34 +353,89 @@ const friend = (userId) => {
         </View>
       </Modal>
 
-    
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFriendActionModalVisible}
+        onRequestClose={handleModalClose}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalcontent}>
+            {isFriend ? (
+              <TouchableOpacity
+                style={styles.modalbtn}
+                onPress={() => handleUnfriend()}
+              >
+                <Text style={styles.modalOption}>Unfriend</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.modalbtn}
+                onPress={handleAcceptFriendRequest}
+              >
+                <Text style={styles.modalOption}>Chấp nhận kết bạn</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.modalbtn}
+              onPress={handleModalClose}
+            >
+              <Text style={styles.modalOption}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.content}>
   <FlatList
-    data={rooms}
+    data={selectedFunction === "personal" ? rooms : groups}
     renderItem={({ item }) => {
-      const displayUser = getDisplayUser(item);
-
-      return (
-        <TouchableOpacity
-          style={styles.itemContainer}
-          onPress={() => handleTodoItemPress(displayUser)}
-        >
-          <Image
-            source={{ uri: displayUser && displayUser.avatar }}
-            style={styles.itemImage}
-          />
-          <View style={styles.itemDetails}>
-            <Text style={styles.itemName}>
-              {displayUser && displayUser.fullName}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      );
+      if (selectedFunction === "group") {
+        // Nếu người dùng chọn chat nhóm, chỉ hiển thị danh sách nhóm
+        const groupIDs = getDisplayGroup(item);
+        return (
+          <TouchableOpacity
+            style={styles.itemContainer}
+            onPress={() => handleGroupPress(item)}
+          >
+            <Text style={styles.itemName}>{item.nameGroups}</Text>
+            <Text style={styles.itemName}>tên của nhóm</Text>
+            {/* <Image source={{ uri: item.avtGroups }} style={styles.groupAvatar} /> */}
+            {/* Bổ sung các phần tử khác cần thiết cho mỗi item nhóm */}
+          </TouchableOpacity>
+        );
+      } else {
+        // Nếu người dùng chọn chat đơn, chỉ hiển thị danh sách chat đơn
+        const displayUser = getDisplayUser(item);
+        return (
+          <TouchableOpacity
+            style={styles.itemContainer}
+            onPress={() => handleTodoItemPress(displayUser)}
+          >
+            <Image
+              source={{ uri: displayUser && displayUser.avatar }}
+              style={styles.itemImage}
+            />
+            <View style={styles.itemDetails}>
+              <Text style={styles.itemName}>
+                {displayUser && displayUser.fullName}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.moreOptionsButton}
+              onPress={() => handleMoreOptionsPress(displayUser)}
+            >
+              <Ionicons name="ellipsis-vertical" size={24} color="black" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        );
+      }
     }}
-    keyExtractor={(item, index) => index.toString()}
+    keyExtractor={(item, index) => item._id || index.toString()}
     contentContainerStyle={styles.listContainer}
   />
 </View>
+
 
 
       <StatusBar backgroundColor="gray" barStyle="dark-content" />
@@ -348,6 +495,7 @@ const friend = (userId) => {
     </SafeAreaView>
   );
 };
+
 const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   header: {
@@ -355,6 +503,9 @@ const styles = StyleSheet.create({
     height: 80,
     paddingTop: 20,
     backgroundColor: "#ff8c00",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
   },
   container: {
     flex: 1,
@@ -362,9 +513,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   searchBarContainer: {
-    position: "absolute",
-    height: 50,
-    width: width * 1,
     flexDirection: "row",
     padding: 10,
   },
@@ -379,11 +527,9 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     marginRight: 10,
-    marginLeft: 10,
   },
   addFriendButton: {
-    marginLeft: "auto",
-    marginRight: 10,
+    marginLeft: 10,
   },
   modalContainer: {
     flex: 1,
@@ -452,7 +598,7 @@ const styles = StyleSheet.create({
   },
   menuView: {
     flexDirection: "row",
-    position: "fixed",
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -467,6 +613,32 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
+  selectedButton: {
+    color: "#ff8c00",
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
+  button: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    backgroundColor: '#fff',
+  },
+  selectedButton: {
+    backgroundColor: '#ff8c00', // Màu nền được thay đổi khi nút được chọn
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  
 });
 
 export default Chatpage;

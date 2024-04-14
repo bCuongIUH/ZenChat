@@ -26,6 +26,9 @@ import ItemAddFriend from "./src/screens/ui/item-Friend/itemAddFriend";
 import { UserProvider } from "./src/screens/ui/component/findUser";
 import ItemUpdatePassword from "./src/screens/ui/item-update-password/itemUpdatePassword";
 import Message from "./src/screens/ui/mess/mess";
+import ItemAddGroup from "./src/screens/ui/item-Friend/itemAddGroup";
+import ItemGroup from "./src/screens/ui/item-mess-group/ItemGroup";
+import MessageGroup from "./src/screens/ui/mess/messGroup";
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -76,6 +79,9 @@ function App() {
               {/* <Stack.Screen name="ItemAddFriend" component={ItemAddFriend} /> */}
               <Stack.Screen name="ItemUpdatePassword" component={ItemUpdatePassword} />
               <Stack.Screen name="Message" component={Message} />
+              <Stack.Screen name="ItemAddGroup" component={ItemAddGroup} />
+              <Stack.Screen name="ItemGroup" component={ItemGroup} />
+              <Stack.Screen name="MessageGroup" component={MessageGroup} />
               <Stack.Screen name="ItemAddFriend">
                 {() => (
                   //<RequireAuth>
@@ -85,6 +91,15 @@ function App() {
                   //</RequireAuth>
                 )}
               </Stack.Screen>
+              {/* <Stack.Screen name="ItemAddGroup">
+                {() => (
+                  //<RequireAuth>
+                    <UserProvider>
+                      <ItemAddGroup />
+                    </UserProvider>
+                  //</RequireAuth>
+                )}
+              </Stack.Screen> */}
             </Stack.Navigator>
             </SocketContext.Provider>
           </SignupContext>
