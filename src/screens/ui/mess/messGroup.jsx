@@ -387,7 +387,7 @@ console.log('====================================');
 
 
 const handleSendMess = () => {
-  if (texting === '') {messages
+  if (texting === '') {messagesGroups
       alert("Mời bạn nhập tin nhắn");
       return;
     
@@ -662,8 +662,17 @@ const handleChange = (e) => {
     handleTexting(newTexting);
 
 };
+
+//button chuyển sang màn hình menu của nhóm
+const handleSettingGroups = () => {
+  nav.navigate('ItemMenuGroups', {
+    groupInfo: groupID,
+    participants: participants
+  });
+}
 console.log('====================================');
-console.log("ten của m",messagesGroups);
+console.log("noi dung tin nhan",participants);
+
 console.log('====================================');
   return (
     <KeyboardAvoidingView
@@ -686,15 +695,16 @@ console.log('====================================');
           <TouchableOpacity style={styles.headerButton}>
             <FontAwesome name="video-camera" size={24} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity  style={styles.headerButton} onPress={handleSettingGroups}>
             <Entypo name="menu" size={24} color="black" />
+            
           </TouchableOpacity>
         </View>
       </View>
   
       <ScrollView ref={messRef} style={styles.messageContent}>
   {/* Hiển thị tin nhắn */}
-  {messages.map((message, index) => (
+  {messagesGroups.map((message, index) => (
     <View key={message.groupID} style={[styles.message, message.author.email === user.email ? styles.messageAuthor : styles.messageReceiver]}>
       {/* Hiển thị avatar của người gửi tin nhắn nếu không phải là user hiện tại */}
       {message.author.email !== user.email && (
