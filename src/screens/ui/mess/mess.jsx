@@ -239,7 +239,7 @@ console.log('====================================');
   };
 
   const handleSendMess = () => {
-    if (texting === '') {messages
+    if (texting === '') {
       Alert.alert("Please enter a message");
       return;
     } else if (!id) {
@@ -583,7 +583,9 @@ const SendToMesageImage = (mm) => {
       return content;
     }
   }
-
+console.log('====================================');
+console.log(messages);
+console.log('====================================');
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}

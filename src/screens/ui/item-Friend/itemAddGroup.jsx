@@ -8,7 +8,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  CheckBox,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -20,16 +19,11 @@ const ItemAddGroup = () => {
   const navigation = useNavigation();
   const { user } = useContext(AuthContext);
   const [groupName, setGroupName] = useState("");
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [selectedCount, setSelectedCount] = useState(0);
   const [friends, setFriends] = useState([]);
-  const [toggleCheckBox, setToggleCheckBox] = useState(false);
-  const [pageGroup, setPageGroup] = useState(false);
-  const [groups, setGroups] = useState([]);
-  const [idGroups, setIdGroups] = useState();
-  const [friendCreateGroup, setFriendCreateGroup] = useState([]);
-  const [groupId, setGroupId] = useState(null);
   const [selectedPhoneNumbers, setSelectedPhoneNumbers] = useState([]);
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [group, setGroups] = useState([]);
+  const [groupId, setGroupId] = useState(null);
 
   useEffect(() => {
     const friendsArray = Object.entries(user.friends).map(
@@ -42,49 +36,36 @@ const ItemAddGroup = () => {
     setFriends(friendsArray);
   }, [user.friends]);
 
-  // check box chọn vào người dùng tạo nhóm + thêm số người dc chọn
   const toggleCheckbox = (friendId, newValue) => {
     const updatedFriends = friends.map((friend) =>
       friend.id === friendId ? { ...friend, selected: newValue } : friend
     );
     setFriends(updatedFriends);
-    // Update selected items
+
     const newSelectedItems = updatedFriends
       .filter((friend) => friend.selected)
-      .map((friend) => friend.id);
-    setSelectedItems(newSelectedItems);
-    // Update selected count
+      .map((friend) => friend.phoneNumber);
+    setSelectedPhoneNumbers(newSelectedItems);
     setSelectedCount(newSelectedItems.length);
   };
 
   const handleAddGroup = () => {
-    if (selectedItems.length < 2) {
+    if (selectedPhoneNumbers.length < 2) {
       alert("Tạo nhóm cần chọn ít nhất 2 người bạn.");
       return;
     }
 
-    // if (!groupName.trim()) {
-    //   alert("Vui lòng nhập tên nhóm.");
-    //   return;
-    // }
-
-    // Chuẩn bị dữ liệu cho việc tạo nhóm
     const data = {
-      // groupName: groupName.trim(),
-      participants: selectedItems,
-      groups: groups 
+      participants: selectedPhoneNumbers,
+      group: group,
     };
 
-    // Gọi hàm createGroups để tạo nhóm
     createGroups(data)
       .then((res) => {
         alert("Tạo nhóm thành công.");
-        // setGroupName("");
-        console.log(res.data);
         setGroupId(res.data.id);
-        setSelectedItems([]); // Xóa danh sách bạn bè được chọn
-        // navigation.navigate("Chatpage", { createdGroup: res.data });
-        navigation.navigate("Chatpage", { createdGroup: res.data, groups: groups });
+        setSelectedPhoneNumbers([]);
+        navigation.navigate("Chatpage", { createdGroup: res.data, group: group });
       })
       .catch((error) => {
         Alert.alert("Lỗi", "Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại sau.");
@@ -95,7 +76,6 @@ const ItemAddGroup = () => {
     const fetchData = async () => {
       getListGroups()
         .then((res) => {
-          // Chỉ setRooms với các object đã được lọc
           setGroups(res.data);
         })
         .catch((err) => {

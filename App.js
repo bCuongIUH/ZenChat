@@ -30,6 +30,7 @@ import ItemAddGroup from "./src/screens/ui/item-Friend/itemAddGroup";
 import ItemGroup from "./src/screens/ui/item-mess-group/ItemGroup";
 import MessageGroup from "./src/screens/ui/mess/messGroup";
 import ItemMenuGroups from "./src/screens/ui/item-mess-group/itemMenuGroups";
+import ItemAddMemberGroups from "./src/screens/ui/item-mess-group/itemAddMenberGroups";
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -84,6 +85,8 @@ function App() {
               <Stack.Screen name="ItemGroup" component={ItemGroup} />
               <Stack.Screen name="MessageGroup" component={MessageGroup} />
               <Stack.Screen name="ItemMenuGroups" component={ItemMenuGroups} />
+              <Stack.Screen name="ItemAddMemberGroups" component={ItemAddMemberGroups} />
+              
               <Stack.Screen name="ItemAddFriend">
                 {() => (
                   //<RequireAuth>

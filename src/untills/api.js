@@ -1,6 +1,7 @@
 import axios from "axios";
 const config = { withCredentials: true };
-const API_URL = "http://192.168.1.9:3050/api"; 
+const API_URL = "http://192.168.1.7:3050/api"; 
+// const API_URL = "http://localhost:3050/api";
 // đăng nhập / đăng ký / xác thực người dùng
 
 export const postEmail = async (data) => {
@@ -405,6 +406,18 @@ export const leaveGroup = async (data) => {
       })
   })
 }
+//attend group
+export const attendGroup = async (data) => {
+  return new Promise((reject, resolve) => {
+      axios.post(`${API_URL}/groups/attendGroups/`,data,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(err => {
+          resolve(err);
+      })
+  })
+}
 //create messages group
 export const createMessagesGroup = async (data) => {
   return new Promise((reject, resolve) => {
@@ -417,3 +430,52 @@ export const createMessagesGroup = async (data) => {
       })
   })
 }
+//delete messages group
+export const deleteMessagesGroups = async (id,data) => {
+  return new Promise((reject, resolve) => {
+      axios.delete(`${API_URL}/chatgroups/${id}/${data.idMessages}/${data.idLastMessageSent}`,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(err => {
+          resolve(err);
+      })
+  })
+}
+// thu hồi messages group
+export const recallMessagesGroups = async (id,data) => {
+  return new Promise((reject, resolve) => {
+      axios.patch(`${API_URL}/chatgroups/${id}/recallMessage`,data,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(err => {
+          resolve(err);
+      })
+  })
+}
+// feedBack messages Group
+export const createMessagesGroupFeedBack = async (id,data) => {
+  return new Promise((reject, resolve) => {
+      axios.post(`${API_URL}/chatgroups/${id}`,data,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(err => {
+          resolve(err);
+      })
+  })
+}
+// update emoji group
+export const updateEmojiGroup = async (id,data) => {
+  return new Promise((reject, resolve) => {
+      axios.patch(`${API_URL}/chatgroups/${id}/updateEmoji`,data,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(error => {
+          resolve(error)
+      })
+  })
+}
+

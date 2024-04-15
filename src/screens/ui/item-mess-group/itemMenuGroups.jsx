@@ -11,7 +11,7 @@ const ItemMenuGroups = ({route}) => {
 console.log('====================================');
 console.log(numberOfMembers);
 // Trong màn hình hiển thị chi tiết nhóm (ItemMenuGroups)
-console.log(groupInfo);
+console.log(groupInfo); // id
 
 console.log('====================================');
 useEffect(() => {
@@ -21,8 +21,17 @@ useEffect(() => {
       setNumberOfMembers(0); // Đặt số lượng thành viên là 0 nếu không có dữ liệu hoặc không có thành viên
     }
   }, [groupInfo]);
+  
+  const handleModalADD = ()=>{
+    nav.navigate('ItemAddMemberGroups',{
+      groupInfo :groupInfo,
+      participants: participants,
+    })
+  }
+
+  
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Go back button */}
       <TouchableOpacity onPress={() => nav.goBack()} style={styles.goBack} >
         <FontAwesome name="angle-left" size={24} color="black" />
@@ -41,7 +50,7 @@ useEffect(() => {
           <FontAwesome name="search" size={20} color="black" />
           <Text style={styles.optionText}>Tìm kiếm tin nhắn</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.optionButton}>
+        <TouchableOpacity style={styles.optionButton} onPress={handleModalADD}>
           <FontAwesome name="user-plus" size={20} color="black" />
           <Text style={styles.optionText}>Thêm thành viên</Text>
         </TouchableOpacity>
@@ -82,7 +91,7 @@ useEffect(() => {
           <Text style={styles.leaveGroupButtonText}>Rời nhóm</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

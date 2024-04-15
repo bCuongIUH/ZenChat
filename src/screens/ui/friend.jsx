@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   TextInput,
@@ -9,15 +9,15 @@ import {
   Modal,
   Text,
   StatusBar,
-  TouchableWithoutFeedback,
   FlatList,
   Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
+import { AuthContext } from "../../untills/context/AuthContext";
 
-export const Friend = () => {
+const Friend = () => {
   const nav = useNavigation();
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -25,7 +25,8 @@ export const Friend = () => {
   const [todoList, setTodoList] = useState([]);
   const [filteredTodoList, setFilteredTodoList] = useState([]);
   const [searchStarted, setSearchStarted] = useState(false);
- 
+  const { user } = useContext(AuthContext);
+
   const handleSearchIconPress = () => {
     setSearchStarted(false);
     setIsSearching(!isSearching);
@@ -36,7 +37,7 @@ export const Friend = () => {
   };
 
   const handleCreateChatPress = () => {
-    setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
+    setActionModalVisible(false);
     nav.navigate("ItemAddFriend");
   };
 
@@ -48,38 +49,12 @@ export const Friend = () => {
     setIsSearching(false);
   };
 
-// ---------------------------
   useEffect(() => {
-    setTodoList([
-      {
-        id: 1,
-        name: "Bach Cuong",
-        image:
-          "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-      {
-        id: 1,
-        name: "Bach Cuong",
-
-        image:
-          "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-      {
-        id: 1,
-        name: "Bach Cuong",
-
-        image:
-          "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-      {
-        id: 1,
-        name: "Bach Cuong",
-
-        image:
-          "https://res.cloudinary.com/dhpqoqtgx/image/upload/v1709272691/ywgngx6l24nrwylcp2ta.jpg",
-      },
-    ]);
-  }, []);
+    if (user && user.friends) {
+      setTodoList(user.friends);
+      setFilteredTodoList(user.friends);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (searchStarted || searchText === "") {
@@ -87,19 +62,19 @@ export const Friend = () => {
         setFilteredTodoList(todoList);
       } else {
         const filteredList = todoList.filter((item) =>
-          item.name.toLowerCase().includes(searchText.toLowerCase())
+          item.fullName && typeof item.fullName === 'string' && item.fullName.toLowerCase().includes(searchText.toLowerCase())
         );
         setFilteredTodoList(filteredList);
       }
     }
   }, [searchStarted, searchText, todoList]);
+  
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.itemContainer}>
-      <Image source={{ uri: item.image }} style={styles.itemImage} />
+      <Image source={{ uri: item.avatar }} style={styles.itemImage} />
       <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        {/* <Text style={styles.itemStatus}>{item.status}</Text> */}
+        <Text style={styles.itemName}>{item.fullName}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -107,41 +82,40 @@ export const Friend = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.searchBarContainer}>
+        <TouchableOpacity
+          onPress={handleSearchIconPress}
+          style={styles.searchIcon}
+        >
           {isSearching ? (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Nhập từ khóa tìm kiếm"
-              placeholderTextColor="gray"
-              value={searchText}
-              onChangeText={(text) => {
-                setSearchStarted(true);
-                setSearchText(text);
-              }}
-              focusable={false}
-            />
-          ) : null}
-          <TouchableOpacity onPress={handleSearchIconPress}>
-            {isSearching ? (
-              <AntDesign name="closecircleo" size={24} color="black" />
-            ) : (
-              <Ionicons
-                style={styles.searchIcon}
-                name="search"
-                size={24}
-                color="black"
-              />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleAddFriendPress}
-            style={styles.addFriendButton}
-          >
-            <Ionicons name="person-add-sharp" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
+            <AntDesign name="closecircleo" size={24} color="black" />
+          ) : (
+            <Ionicons name="search" size={24} color="black" />
+          )}
+        </TouchableOpacity>
+        <TextInput
+          style={[styles.searchInput, isSearching && styles.searchInputActive]}
+          placeholder="Tìm kiếm"
+          placeholderTextColor="gray"
+          value={searchText}
+          onChangeText={(text) => {
+            setSearchStarted(true);
+            setSearchText(text);
+          }}
+        />
+        <TouchableOpacity
+          onPress={handleAddFriendPress}
+          style={styles.addFriendButton}
+        >
+          <Ionicons name="person-add-sharp" size={24} color="black" />
+        </TouchableOpacity>
       </View>
+
+      <FlatList
+        data={filteredTodoList}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={styles.listContainer}
+      />
 
       <Modal
         animationType="slide"
@@ -166,15 +140,6 @@ export const Friend = () => {
           </View>
         </View>
       </Modal>
-
-      <View style={styles.content}>
-        <FlatList
-          data={filteredTodoList}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
 
       <StatusBar backgroundColor="gray" barStyle="dark-content" />
       <View style={styles.menuView}>
@@ -225,132 +190,99 @@ export const Friend = () => {
     </SafeAreaView>
   );
 };
+
 const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   header: {
-    //width: "100%",
-    width: width * 1,
-    height: 80,
-    paddingTop: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    //paddingTop: 20,
+    height :80,
     backgroundColor: "#ff8c00",
   },
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    alignItems: "center",
-    // width: "100%",
-    // height: "100%",
-    width: width * 1,
-    height: height * 1,
   },
-  searchBarContainer: {
-    position: "absolute",
-    height: 50,
-    // width: "100%",
-    width: width * 1,
-    flexDirection: "row",
-    padding: 10,
+  searchIcon: {
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    // height: "80%",
-    height: 35,
-    backgroundColor: "white",
-    borderRadius: 10,
-    paddingLeft: 10,
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    backgroundColor: "#f2f2f2",
+    fontSize: 16,
+    color: "black",
   },
-  searchIcon: {
-    width: 25,
-    height: 25,
-    marginRight: 10,
-    marginLeft: 10,
+  searchInputActive: {
+    backgroundColor: "#fff",
   },
   addFriendButton: {
-    marginLeft: "auto",
-    marginRight: 10,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  modalcontent: {
-    backgroundColor: "gray",
-    //height: "25%",
-    height: height * 0.25,
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 10,
-  },
-  modalOption: {
-    fontSize: 15,
-    color: "white",
-    fontWeight: "bold",
-  },
-  modalbtn: {
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-    
-    height :30,
-    width : width * 0.7,
-    backgroundColor: "#ff8c00",
-    margin: 5,
-  },
-  content: {
-    flex: 1,
-    // width: "100%",
-    width : width *1,
+    marginLeft: 10,
   },
   listContainer: {
-    paddingHorizontal: 10,
-    paddingTop: 10,
+    paddingVertical: 10,
   },
   itemContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#f9f9f9",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
   },
   itemImage: {
-    width: 80,
-    height: 80,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
   },
   itemDetails: {
     flex: 1,
   },
   itemName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 5,
   },
-  itemStatus: {
-    fontSize: 14,
-    color: "gray",
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalcontent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  modalOption: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ff8c00",
+    marginBottom: 20,
+  },
+  modalbtn: {
+    width: "80%",
+    paddingVertical: 15,
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
   },
   menuView: {
     flexDirection: "row",
-    position: "fixed",
-    bottom: 0,
-    left: 0,
-    right: 0,
     height: 65,
     backgroundColor: "#fff",
-    borderTopWidth: 0.4,
-    borderColor: "gray",
-    alignItems: "center",
-    justifyContent: "space-around",
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
   },
   tabBarButton: {
     flex: 1,
+    justifyContent: "center",
     alignItems: "center",
   },
 });
