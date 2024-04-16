@@ -36,7 +36,8 @@ import { KeyboardAvoidingView } from "react-native";
 import { FlatList } from "react-native";
 
 export const MessageGroups = ({ route }) => {
-  const { groupID, fullName, group, avtGroups,createdAt } = route.params;
+//   cơonst { groupID, fullName, group, avtGroups,createdAt } = route.params;
+const {group}=route.params;
   const [messagesGroups, setMessagesGroups] = useState([]);
   const { user } = useContext(AuthContext);
   const socket = useContext(SocketContext);
@@ -63,7 +64,8 @@ export const MessageGroups = ({ route }) => {
       const time = dataTime.substring(11, 16);
       return time;
   }
-  console.log("id ", group._id);
+
+
   useEffect(() => {
     const RoomMessages = {
         groupId: groupID
@@ -101,9 +103,7 @@ export const MessageGroups = ({ route }) => {
           })
       
   }, [group])
-  console.log('====================================');
-  console.log("ten mấy thằng trong phòng",group);
-  console.log('====================================');
+
   useEffect(() => {
       if (group === undefined) {
           return;
@@ -241,9 +241,7 @@ export const MessageGroups = ({ route }) => {
 
 
   };
-  console.log('====================================');
-  console.log();
-  console.log('====================================');
+
   const handleSendMess = () => {
       if (texting === '') {
           alert("Mời bạn nhập tin nhắn");

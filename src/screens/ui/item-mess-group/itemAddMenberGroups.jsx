@@ -1,3 +1,4 @@
+
 import React, { useState, useContext, useEffect } from "react";
 import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -6,18 +7,12 @@ import { attendGroup } from "../../../untills/api";
 import Checkbox from "expo-checkbox";
 
 const ItemAddMemberGroups = ({ route }) => {
-  const { groupInfo, participants } = route.params;
+  const { group } = route.params;
   const nav = useNavigation();
   const { user } = useContext(AuthContext);
   const [selectedItems, setSelectedItems] = useState([]);
 
-  useEffect(() => {
-    if (groupInfo && participants && user) {
-      const friendsNumbersInGroup = participants.map(participant => participant.phoneNumber);
-      const friendsNotInGroup = user.friends.filter(friend => !friendsNumbersInGroup.includes(friend.phoneNumber));
-      setSelectedItems(friendsNotInGroup.map(friend => friend.phoneNumber));
-    }
-  }, [groupInfo, participants, user]);
+
 
   const handleCheckboxChange = (phoneNumber) => {
     if (selectedItems.includes(phoneNumber)) {
@@ -29,12 +24,10 @@ const ItemAddMemberGroups = ({ route }) => {
 
   const addMembersToGroup = () => {
     const data = {
-      participants: selectedItems,
-      groupId: groupInfo._id 
+      participants: group.participants,
+      groupId: group._id 
     };
-console.log('==================');
-console.log(groupInfo);
-console.log('====================================');
+
     attendGroup(data)
       .then((res) => {
         if (res.data.groupsUpdate) {
@@ -63,7 +56,7 @@ console.log('====================================');
               value={selectedItems.includes(item.phoneNumber)}
               onValueChange={() => handleCheckboxChange(item.phoneNumber)}
             />
-            {/* <Text>{item.fullName}</Text> Thay vì hiển thị tên, bạn cũng có thể hiển thị avatar ở đây */}
+            <Text style={styles.friendName}>{group.fullName}</Text>
           </View>
         )}
       />
@@ -99,6 +92,9 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "white",
     fontWeight: "bold",
+  },
+  friendName: {
+    marginLeft: 10, // Để tạo khoảng cách giữa checkbox và tên bạn bè
   },
 });
 

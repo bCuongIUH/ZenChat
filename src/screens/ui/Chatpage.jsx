@@ -44,7 +44,7 @@ export const Chatpage = () => {
   const [idGroups, setIdGroups] = useState();
   const [friendCreateGroup, setFriendCreateGroup] = useState([]);
   const [createdGroup, setCreatedGroup] = useState(null);
-  const [isChatSingle, setIsChatSingle] = useState(true); // State to manage chat type
+  const [isChatSingle, setIsChatSingle] = useState(true); 
 
   const handleSearchIconPress = () => {
     setSearchStarted(false);
@@ -143,21 +143,62 @@ console.log("group của bạn ",groups);
       return group.creator._id === user?._id ? group.recipient : group.creator;
     }
   };
-  
+  const settingUsers = (data) => {
+    if (data.creator.email === user.email) {
+        return data.recipient;
+    } else {
+        return data.creator;
+    }
+}
 
-  const handleGroupPress = (item) => {
-    // Thực hiện điều hướng sang màn hình mess và truyền thông tin nhóm qua route params
-    nav.navigate("MessageGroup", {
-      groupID: item._id, // ID của nhóm
-      avtGroups: item.avtGroups, // Avatar của nhóm
+  const setTingNameGroups = (group) => {
+    if (group.nameGroups === '') {
+        return `Groups của ${group.creator.fullName}`
+    } else {
+        return group.nameGroups;
+    }
+}
+const getDisplayLastMessagesGroups = (messages) => {
+  const message = "";
+  if (messages.lastMessageSent === undefined || messages.lastMessageSent.content === undefined) {
+      return message;
+  }
 
-      nameGroups: item.nameGroups, // Tên của nhóm
-      groups : item.group,
-      group : item.group
-    });
+  else if (messages.lastMessageSent.content.endsWith('.jpg') || messages.lastMessageSent.content.endsWith('.png') || messages.lastMessageSent.content.endsWith('.jpeg') || messages.lastMessageSent.content.endsWith('.gif') || messages.lastMessageSent.content.endsWith('.tiff') || messages.lastMessageSent.content.endsWith('.jpe') || messages.lastMessageSent.content.endsWith('.jxr') || messages.lastMessageSent.content.endsWith('.tif') || messages.lastMessageSent.content.endsWith('.tif')) {
+      return "Send image";
+  }
+  else if (messages.lastMessageSent.content.endsWith('.docx') || messages.lastMessageSent.content.endsWith('.pdf') || messages.lastMessageSent.content.endsWith('.pdf') || messages.lastMessageSent.content.endsWith('.txt') || messages.lastMessageSent.content.endsWith('.xlsx')) {
+      return "Send file";
+  }
+  else if (messages.lastMessageSent.content.endsWith('.mp4')) {
+      return "Send video";
+  }
+  else {
+      const message = messages.lastMessageSent.content;
+      if (message === "") {
+          return "Tin nhắn đã được thu hồi";
+      }
+      const lastMessage = `...${message.slice(-20)}`;
+      return lastMessage;
+  }
+
+}
+// console.log("",groups);
+  // const handleGroupPress = (item) => {
+  //   // Thực hiện điều hướng sang màn hình mess và truyền thông tin nhóm qua route params
+  //   nav.navigate("MessageGroup", {
+  //     // groupID: item._id, // ID của nhóm
+  //     // avtGroups: item.avtGroups, // Avatar của nhóm
+
+  //     // nameGroups: setTingNameGroups(item.nameGroups), // Tên của nhóm
+  //     // action : getDisplayLastMessagesGroups(item) 
+  //     item
+  //   });
+  // };
+
+  const handleGroupPress = (group) => {
+    nav.navigate("MessageGroup", { group });
   };
-
-  
   
   
   const friend = (userId) => {
@@ -408,7 +449,7 @@ useEffect(() => {
               style={styles.itemContainer}
               onPress={() => handleGroupPress(item)}
             >
-               <Image source={{ uri: item.avtGroups }} style={styles.itemImage} />
+               <Image source={ item.avtGroups } style={styles.itemImage} />
               <Text style={styles.itemName}>{item.nameGroups}</Text>
               {/* <Text style={styles.itemName}>tên của nhóm</Text> */}
 

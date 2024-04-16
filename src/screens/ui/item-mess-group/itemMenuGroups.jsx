@@ -3,33 +3,73 @@ import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'rea
 import { FontAwesome } from '@expo/vector-icons'; 
 import { AuthContext } from "../../../untills/context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
+import { deleteGroup, leaveGroup } from '../../../untills/api';
 const ItemMenuGroups = ({route}) => {
-    const { groupInfo, participants } = route.params;
+    const { groupID, participants, group } = route.params;
     const nav = useNavigation();
     const { user } = useContext(AuthContext);
-    const [numberOfMembers, setNumberOfMembers] = useState(0); // đếm thành viên trong nhóm 
-console.log('====================================');
-console.log(numberOfMembers);
-// Trong màn hình hiển thị chi tiết nhóm (ItemMenuGroups)
-console.log(groupInfo); // id
+    const [numberOfMembers, setNumberOfMembers] = useState(0); // đếm thành viên trong nhóm
+ 
+useEffect(()=>{
+  console.log("ten menu gr",group);
+})
 
-console.log('====================================');
 useEffect(() => {
-    if (groupInfo && groupInfo.members) {
+    if (group._id && group._id.members) {
       setNumberOfMembers(groupInfo.members.length);
     } else {
       setNumberOfMembers(0); // Đặt số lượng thành viên là 0 nếu không có dữ liệu hoặc không có thành viên
     }
-  }, [groupInfo]);
+  }, [group]);
   
   const handleModalADD = ()=>{
     nav.navigate('ItemAddMemberGroups',{
-      groupInfo :groupInfo,
-      participants: participants,
+      group
     })
   }
-
-  
+  //Giải tán
+  const handleDissolution = () => {
+      const data = {
+          groupId: group._id
+      }
+      deleteGroup(data.groupId)
+      .then((res) => {
+          if(res.data.creator.email)
+          {
+              alert("Giải tán nhóm thành công")
+              nav.navigate('Chatpage')
+          } else {
+              alert("Giải tán phòng không thành công")
+          }
+          
+      })
+      .catch((err) => {
+          console.log(err);
+          alert("Lỗi hệ thống");
+      })
+  }
+  const handleLeaveGroup = () => {
+      const data = {
+          groupId: group._id
+      }
+      leaveGroup(data)
+      .then((res) => {
+          if (res.data.message === "Bạn là chủ phòng bạn không thể rời đi") {
+              alert(res.data.message);
+          } else if(res.data.status === 400) {
+              alert("Rời phòng không thành công")
+              nav.navigate('Chatpage')
+          } else {
+              
+              setParticipants(res.data.groupsUpdate.participants)
+              alert("Rời phòng thành công")
+          }
+      })
+      .catch((err) => {
+          console.log(err);
+          alert("Lỗi Server")
+      })
+  }
   return (
     <ScrollView style={styles.container}>
       {/* Go back button */}
@@ -86,8 +126,12 @@ useEffect(() => {
         <FontAwesome name="users" size={20} color="black" />
         <Text style={styles.viewMembersButtonText}> Xem thành viên nhóm ({numberOfMembers})</Text>
         </TouchableOpacity>
+        {/* giải tán nhóm */}
+        <TouchableOpacity style={styles.giaiTanGroupButton} onPress={handleDissolution}>
+          <Text style={styles.leaveGroupButtonText}>Giải tán</Text>
+        </TouchableOpacity>
         {/* Nút rời nhóm */}
-        <TouchableOpacity style={styles.leaveGroupButton}>
+        <TouchableOpacity style={styles.leaveGroupButton} onPress={handleLeaveGroup}>
           <Text style={styles.leaveGroupButtonText}>Rời nhóm</Text>
         </TouchableOpacity>
       </View>
@@ -178,6 +222,13 @@ const styles = StyleSheet.create({
   },
   leaveGroupButton: {
     backgroundColor: '#ff8c00',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  giaiTanGroupButton: {
+    backgroundColor: 'silver',
     padding: 15,
     borderRadius: 10,
     marginTop: 20,

@@ -1,7 +1,7 @@
 import axios from "axios";
 const config = { withCredentials: true };
-const API_URL = "http://192.168.1.7:3050/api"; 
-// const API_URL = "http://localhost:3050/api";
+// const API_URL = "http://192.168.1.59:3050/api"; 
+const API_URL = "http://localhost:3050/api";
 // đăng nhập / đăng ký / xác thực người dùng
 
 export const postEmail = async (data) => {
