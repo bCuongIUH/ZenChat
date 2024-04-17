@@ -583,9 +583,7 @@ const SendToMesageImage = (mm) => {
       return content;
     }
   }
-console.log('====================================');
-console.log(messages);
-console.log('====================================');
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}

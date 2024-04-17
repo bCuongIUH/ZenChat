@@ -1,3 +1,4 @@
+
 // import React, { useState, useEffect, useContext, useRef } from "react";
 // import {
 //   View,
@@ -7,6 +8,7 @@
 //   StyleSheet,
 //   TouchableOpacity,
 //   Image,
+//   FlatList,
 // } from "react-native";
 // import { findAuth, createRooms, sendFriends } from "../../../untills/api";
 // import { useUser } from "../../ui/component/findUser";
@@ -21,10 +23,13 @@
 //   const { handleFindUser } = useUser();
 //   const [authFound, setAuthFound] = useState([]);
 //   const [isAddClicked, setIsAddClicked] = useState(false);
+//   const [showFriendList, setShowFriendList] = useState(false);
 //   const navigation = useNavigation();
 //   const socket = useContext(SocketContext);
 //   const formRef = useRef(null);
 //   const [rooms, setRooms] = useState([]);
+//   const [friendList, setFriendList] = useState([]);
+//   const [showSearchBar, setShowSearchBar] = useState(true); // Thêm state mới cho trạng thái của thanh tìm kiếm
 
 //   const handleSearchChange = (text) => {
 //     setPhoneNumber(text);
@@ -101,57 +106,17 @@
 //     console.log(typeof authFound);
 //   }, [authFound]);
 
-
-//   //update list rom qua phòng bên chatpage
 //   useEffect(() => {
-//     socket.on("connected", () => console.log("Connected"));
-//     socket.on(user.email, (roomSocket) => {
-//       setRooms((prevRooms) => [...prevRooms, roomSocket]);
-//     });
-//     socket.on(user.email, (roomSocket) => {
-//       updateListRooms(roomSocket.rooms);
-//     });
+//     // Fetch friend list logic here
+//     // const fetchedFriendList = ...
+//     // setFriendList(fetchedFriendList);
+//   }, []);
 
-//     return () => {
-//       socket.off("connected");
-//       socket.off(user.email);
-//       socket.off(user.email);
-//     };
-//   }, []);
-//   useEffect(() => {
-//     socket.on(`updateLastMessages${user.email}`, (lastMessageUpdate) => {
-//       setRooms((prevRooms) => {
-//         // Cập nhật phòng đã được cập nhật
-//         return prevRooms.map((room) => {
-//           if (room === undefined || lastMessageUpdate === undefined) {
-//             return room;
-//           }
-//           if (room._id === lastMessageUpdate._id) {
-//             return lastMessageUpdate;
-//           }
-//           return room;
-//         });
-//       });
-//     });
-//     socket.on(`updateLastMessagesed${user.email}`, (lastMessageUpdate) => {
-//       setRooms((prevRooms) => {
-//         // Cập nhật phòng đã được cập nhật
-//         return prevRooms.map((room) => {
-//           if (room === undefined || lastMessageUpdate === undefined) {
-//             return room;
-//           }
-//           if (room._id === lastMessageUpdate._id) {
-//             return lastMessageUpdate;
-//           }
-//           return room;
-//         });
-//       });
-//     });
-//     return () => {
-//       socket.off(`updateLastMessages${user.email}`);
-//       socket.off(`updateLastMessagesed${user.email}`);
-//     };
-//   }, []);
+//   // Function to show friend list
+//   const handleShowFriendList = () => {
+//     setShowSearchBar(true); // Show search bar when switching to friend list view
+//     setShowFriendList(true);
+//   };
 
 //   return (
 //     <View style={styles.container}>
@@ -159,51 +124,88 @@
 //       <View style={styles.header}>
 //         <TouchableOpacity onPress={() => navigation.goBack()}>
 //           <AntDesign name="arrowleft" size={24} color="black" />
-          
 //         </TouchableOpacity>
 //       </View>
 
-//       {/* Thanh tìm kiếm */}
-//       <View style={styles.searchContainer}>
-//         <TextInput
-//           style={styles.input}
-//           onChangeText={handleSearchChange}
-//           placeholder="Nhập số điện thoại"
-//           value={phoneNumber}
-//         />
-//         <TouchableOpacity onPress={handleFoundUser}>
-//           <FontAwesome name="search" size={24} color="black" />
+//       {/* Search Bar */}
+//       {showSearchBar && (
+//         <View style={styles.searchContainer}>
+//           <TextInput
+//             style={styles.input}
+//             onChangeText={handleSearchChange}
+//             placeholder="Nhập số điện thoại"
+//             value={phoneNumber}
+//           />
+//           <TouchableOpacity onPress={handleFoundUser}>
+//             <FontAwesome name="search" size={24} color="black" />
+//           </TouchableOpacity>
+//         </View>
+//       )}
+
+//       {/* Options */}
+//       <View style={styles.optionsContainer}>
+//         <TouchableOpacity
+//           style={[styles.option, { marginRight: 10 }]}
+//           onPress={() => setShowFriendList(false)}
+//         >
+//           <Text style={styles.optionText}>Tạo Nhóm</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity
+//           style={styles.option}
+//           onPress={handleShowFriendList}
+//         >
+//           <Text style={styles.optionText}>Danh sách bạn bè</Text>
 //         </TouchableOpacity>
 //       </View>
 
-//       {/* Thông tin người dùng */}
-//       {authFound.length > 0 && (
-//         <View style={styles.userInfoContainer}>
-//           <View style={styles.userInfo}>
-//             <Image
-//               source={{ uri: authFound[0].avatar }}
-//               style={styles.avatar}
-//             />
-//             <View style={styles.textContainer}>
-//               <Text style={styles.fullName}>{authFound[0].fullName}</Text>
-//               <Text style={styles.phoneNumber}>
-//                 PhoneNumber: {authFound[0].phoneNumber}
-//               </Text>
+//       {/* Content */}
+//       {!showFriendList ? (
+//         // Current function
+//         authFound.length > 0 && (
+//           <View style={styles.userInfoContainer}>
+//             <View style={styles.userInfo}>
+//               <Image
+//                 source={{ uri: authFound[0].avatar }}
+//                 style={styles.avatar}
+//               />
+//               <View style={styles.textContainer}>
+//                 <Text style={styles.fullName}>{authFound[0].fullName}</Text>
+//                 <Text style={styles.phoneNumber}>
+//                   PhoneNumber: {authFound[0].phoneNumber}
+//                 </Text>
+//               </View>
+//             </View>
+//             {/* Add friend button and cancel button */}
+//             <View style={styles.buttonContainer}>
+//               {!isAddClicked ? (
+//                 <TouchableOpacity onPress={handleAddClick}>
+//                   <Text style={styles.addButton}>Thêm bạn</Text>
+//                 </TouchableOpacity>
+//               ) : (
+//                 <TouchableOpacity onPress={() => setIsAddClicked(false)}>
+//                   <Text style={styles.cancelButton}>Cancel</Text>
+//                 </TouchableOpacity>
+//               )}
 //             </View>
 //           </View>
-//           {/* Nút thêm bạn và nút hủy */}
-//           <View style={styles.buttonContainer}>
-//             {!isAddClicked ? (
-//               <TouchableOpacity onPress={handleAddClick}>
-//                 <Text style={styles.addButton}>Thêm bạn</Text>
-//               </TouchableOpacity>
-//             ) : (
-//               <TouchableOpacity onPress={() => setIsAddClicked(false)}>
-//                 <Text style={styles.cancelButton}>Cancel</Text>
-//               </TouchableOpacity>
-//             )}
-//           </View>
-//         </View>
+//         )
+//       ) : (
+//         // Friend list
+//         <FlatList
+//           data={friendList}
+//           renderItem={({ item }) => (
+//             <View style={styles.friendItem}>
+//               <Image source={{ uri: item.avatar }} style={styles.avatar} />
+//               <View style={styles.textContainer}>
+//                 <Text style={styles.fullName}>{item.fullName}</Text>
+//                 <Text style={styles.phoneNumber}>
+//                   PhoneNumber: {item.phoneNumber}
+//                 </Text>
+//               </View>
+//             </View>
+//           )}
+//           keyExtractor={(item) => item.id}
+//         />
 //       )}
 //     </View>
 //   );
@@ -243,8 +245,22 @@
 //     flex: 1,
 //     marginRight: 10,
 //   },
+//   optionsContainer: {
+//     flexDirection: "row",
+//     justifyContent: "center",
+//     marginTop: 20,
+//   },
+//   option: {
+//     padding: 10,
+//     backgroundColor: "#ff8c00",
+//     borderRadius: 5,
+//   },
+//   optionText: {
+//     color: "white",
+//     fontWeight: "bold",
+//   },
 //   userInfoContainer: {
-//     marginTop: 100,
+//     marginTop: 20,
 //   },
 //   userInfo: {
 //     flexDirection: "row",
@@ -288,9 +304,15 @@
 //     textAlign: "center",
 //     width: 100,
 //   },
+//   friendItem: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     marginBottom: 20,
+//   },
 // });
 
 // export default ItemAddFriend;
+
 import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   View,
@@ -417,8 +439,23 @@ const ItemAddFriend = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="black" />
         </TouchableOpacity>
+        <Text style={styles.headerText}>Thêm bạn bè</Text>
       </View>
-
+  
+      {/* Current User Info */}
+      <View style={styles.userInfoContainer}>
+        <View style={styles.userInfo}>
+          <Image
+            source={{ uri: user.avatar }}
+            style={styles.avatar}
+          />
+          <View style={styles.textContainer}>
+            <Text style={styles.fullName}>{user.fullName}</Text>
+            <Image source={require('./QR.png')} style={styles.qrCode} />
+          </View>
+        </View>
+      </View>
+  
       {/* Search Bar */}
       {showSearchBar && (
         <View style={styles.searchContainer}>
@@ -433,56 +470,39 @@ const ItemAddFriend = () => {
           </TouchableOpacity>
         </View>
       )}
-
-      {/* Options */}
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity
-          style={[styles.option, { marginRight: 10 }]}
-          onPress={() => setShowFriendList(false)}
-        >
-          <Text style={styles.optionText}>Tạo Nhóm</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.option}
-          onPress={handleShowFriendList}
-        >
-          <Text style={styles.optionText}>Danh sách bạn bè</Text>
-        </TouchableOpacity>
-      </View>
-
+  
       {/* Content */}
-      {!showFriendList ? (
-        // Current function
-        authFound.length > 0 && (
-          <View style={styles.userInfoContainer}>
-            <View style={styles.userInfo}>
-              <Image
-                source={{ uri: authFound[0].avatar }}
-                style={styles.avatar}
-              />
-              <View style={styles.textContainer}>
-                <Text style={styles.fullName}>{authFound[0].fullName}</Text>
-                <Text style={styles.phoneNumber}>
-                  PhoneNumber: {authFound[0].phoneNumber}
-                </Text>
-              </View>
-            </View>
-            {/* Add friend button and cancel button */}
-            <View style={styles.buttonContainer}>
-              {!isAddClicked ? (
-                <TouchableOpacity onPress={handleAddClick}>
-                  <Text style={styles.addButton}>Thêm bạn</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity onPress={() => setIsAddClicked(false)}>
-                  <Text style={styles.cancelButton}>Cancel</Text>
-                </TouchableOpacity>
-              )}
+      {authFound.length > 0 && (
+        <View style={styles.userInfoContainer}>
+          <View style={styles.userInfo}>
+            <Image
+              source={{ uri: authFound[0].avatar }}
+              style={styles.avatar}
+            />
+            <View style={styles.textContainer}>
+              <Text style={styles.fullName}>{authFound[0].fullName}</Text>
+              <Text style={styles.phoneNumber}>
+                PhoneNumber: {authFound[0].phoneNumber}
+              </Text>
             </View>
           </View>
-        )
-      ) : (
-        // Friend list
+          {/* Add friend button and cancel button */}
+          <View style={styles.buttonContainer}>
+            {!isAddClicked ? (
+              <TouchableOpacity onPress={handleAddClick}>
+                <Text style={styles.addButton}>Thêm bạn</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => setIsAddClicked(false)}>
+                <Text style={styles.cancelButton}>Cancel</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
+  
+      {/* Friend list */}
+      {showFriendList && (
         <FlatList
           data={friendList}
           renderItem={({ item }) => (
@@ -501,13 +521,13 @@ const ItemAddFriend = () => {
       )}
     </View>
   );
+  
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start", // Thay đổi từ "center" thành "flex-start"
+    alignItems: "center",
   },
   header: {
     flexDirection: "row",
@@ -519,6 +539,13 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    height :80
+  },
+  headerText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 20,
+    marginLeft: 10,
   },
   searchContainer: {
     flexDirection: "row",
@@ -527,6 +554,7 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 10,
     marginTop: 20,
+    marginBottom: 20, 
   },
   input: {
     height: 40,
@@ -537,22 +565,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
   },
-  optionsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-  option: {
-    padding: 10,
-    backgroundColor: "#ff8c00",
-    borderRadius: 5,
-  },
-  optionText: {
-    color: "white",
-    fontWeight: "bold",
-  },
   userInfoContainer: {
-    marginTop: 20,
+    marginTop: 90,
+    alignItems: "center", // Canh chỉnh nội dung vào giữa
   },
   userInfo: {
     flexDirection: "row",
@@ -600,6 +615,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
+  },
+  userDetails: {
+    flexDirection: "column", 
+    alignItems: "center",
+    marginLeft: 10,
+    marginTop: 20, 
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  qrCodeContainer: {
+    width: 100, 
+    height: 100,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10, 
+  },
+  qrCode: {
+    width: 90, 
+    height: 90,
   },
 });
 

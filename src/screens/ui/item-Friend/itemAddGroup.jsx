@@ -288,12 +288,14 @@ const ItemAddGroup = () => {
     };
     fetchData();
   }, []);
+
+  //chọn ảnh
 const handleChooseImage =()=>{
   
 }
-socket.on(`createGroups${user.email}`, data => {
-  setGroups(prevGroups => [...prevGroups, data])
-})
+
+
+//socket
 useEffect(() => {
   socket.on('connected', () => console.log('Connected'));
   socket.on(user.email, roomSocket => {

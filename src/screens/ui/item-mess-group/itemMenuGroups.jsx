@@ -4,23 +4,22 @@ import { FontAwesome } from '@expo/vector-icons';
 import { AuthContext } from "../../../untills/context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import { deleteGroup, leaveGroup } from '../../../untills/api';
+import { SocketContext } from '../../../untills/context/SocketContext';
 const ItemMenuGroups = ({route}) => {
-    const { groupID, participants, group } = route.params;
+    const {  group } = route.params;
     const nav = useNavigation();
     const { user } = useContext(AuthContext);
     const [numberOfMembers, setNumberOfMembers] = useState(0); // đếm thành viên trong nhóm
- 
-useEffect(()=>{
-  console.log("ten menu gr",group);
-})
+    const [participants, setParticipants] = useState([]);
+    const socket = useContext(SocketContext);
 
 useEffect(() => {
-    if (group._id && group._id.members) {
-      setNumberOfMembers(groupInfo.members.length);
-    } else {
-      setNumberOfMembers(0); // Đặt số lượng thành viên là 0 nếu không có dữ liệu hoặc không có thành viên
-    }
-  }, [group]);
+  if (group && group.participants) {
+    setNumberOfMembers(group.participants.length);
+  } else {
+    setNumberOfMembers(0); // Đặt số lượng thành viên là 0 nếu không có dữ liệu hoặc không có thành viên
+  }
+}, [group]);
   
   const handleModalADD = ()=>{
     nav.navigate('ItemAddMemberGroups',{
@@ -70,6 +69,106 @@ useEffect(() => {
           alert("Lỗi Server")
       })
   }
+  //socket
+  useEffect(() => {
+    if (group === undefined) {
+        return;
+    }
+    socket.on('connected', () => console.log('Connected'));
+    socket.on(`leaveGroupsId${group._id}`, (data) => {
+        if (data.userLeave !== user.email) {
+            setParticipants(data.groupsUpdate.participants)
+        }
+        
+    })
+    // socket.on(group._id, (data) => {
+    //     setMessagesGroups(prevMessages => [...prevMessages, data.message])
+    // })
+    // socket.on(`emojiGroup${group._id}`, data => {
+    //     setMessagesGroups(prevMessagesGroup => {
+    //         return prevMessagesGroup.map(message => {
+    //             if (message === undefined || data.messagesUpdate === undefined) {
+    //                 return message;
+    //             }
+    //             if (message._id === data.messagesUpdate._id) {
+
+    //                 return data.messagesUpdate;
+    //             }
+    //             return message;
+    //         })
+    //     })
+    // })
+    // socket.on(`deleteMessageGroup${group._id}`, (data) => {
+    //     if (data) {
+    //         // Loại bỏ tin nhắn bằng cách filter, không cần gói trong mảng mới
+    //         setMessagesGroups(prevMessages => prevMessages.filter(item => item._id !== data.idMessages));
+
+    //     }
+    // }) 
+    // socket.on(`recallMessageGroup${group._id}`, data => {
+    //     if (data) {
+    //         setMessagesGroups(preMessagesGroups=> {
+    //         return preMessagesGroups.map(message => {
+    //             if (message === undefined || data.messagesGroupUpdate === undefined) {
+    //                 return message;
+    //             }
+    //             if (message._id === data.messagesGroupUpdate._id) {
+
+    //                 return data.messagesGroupUpdate;
+    //             }
+    //             return message;
+    //             })
+    //         })
+    //     }
+        
+    // })
+    socket.on(`attendGroup${group._id}`, (data) => {
+        if (data) {
+           setParticipants(data.groupsUpdate.participants) 
+        }
+        
+    })
+    // socket.on(`feedBackGroup${group._id}`, (data) => {
+    //     setMessagesGroups(prevMessages => [...prevMessages, data.message])
+    // })
+    socket.on(`kickOutGroup${group._id}` , (data) => {
+        setParticipants(data.groupsUpdate.participants)
+    })
+    socket.on(`updateGroup${group._id}`, data => {
+        setTam(data.avtGroups)
+        setUpdateImageGroup(data.avtGroups)
+        setNameGroup(data.nameGroups)
+        // setNameOfGroups(data.nameGroups)
+    })
+    return () => {
+        
+        socket.off(`leaveGroupsId${group._id}`)
+        socket.off(group._id)
+        socket.off(`emojiGroup${group._id}`)
+        socket.off(`deleteMessageGroup${group._id}`)
+        socket.off(`recallMessageGroup${group._id}`)
+        socket.off(`attendGroup${group._id}`)
+        socket.off(`feedBackGroup${group._id}`)
+        socket.off(`kickOutGroup${group._id}`)
+        socket.off(`updateGroup${group._id}`)
+    }
+},[socket, group])
+  //set tên group.
+  const [updateImageGroup, setUpdateImageGroup] = useState()
+  const setTingNameGroups = (group) => {
+    if (group.nameGroups === '') {
+        return `Groups của ${group.creator.fullName}`
+    } else {
+        return group.nameGroups;
+    }
+  }
+  // màn hình xem thành viên trong nhóm
+  const navigateToMembersScreen = () => {
+    nav.navigate('ItemMemberGroup', {
+      group
+    });
+  }
+  
   return (
     <ScrollView style={styles.container}>
       {/* Go back button */}
@@ -80,8 +179,10 @@ useEffect(() => {
 
       {/* Avatar and group name */}
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: 'https://th.bing.com/th/id/OIP.dOTjvq_EwW-gR9sO5voajQHaHa?rs=1&pid=ImgDetMain' }} style={styles.avatar} />
-        <Text style={styles.groupName}>Tên nhóm</Text>
+        {/* <Image source={{ uri: 'https://th.bing.com/th/id/OIP.dOTjvq_EwW-gR9sO5voajQHaHa?rs=1&pid=ImgDetMain' }} style={styles.avatar} />
+        <Text style={styles.groupName}>Tên nhóm</Text> */}
+        <Image source={ group.avtGroups} style={styles.itemImage} />
+             <Text style={styles.itemName}>{setTingNameGroups(group)}</Text>
       </View>
 
       {/* Options */}
@@ -237,6 +338,17 @@ const styles = StyleSheet.create({
   leaveGroupButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  itemName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 20
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 45  ,
+    marginRight: 15,
   },
 });
 

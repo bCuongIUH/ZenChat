@@ -1,6 +1,6 @@
 import axios from "axios";
 const config = { withCredentials: true };
-// const API_URL = "http://192.168.1.59:3050/api"; 
+// const API_URL = "http://192.168.5.130:3050/api"; 
 const API_URL = "http://localhost:3050/api";
 // đăng nhập / đăng ký / xác thực người dùng
 
@@ -470,6 +470,18 @@ export const createMessagesGroupFeedBack = async (id,data) => {
 export const updateEmojiGroup = async (id,data) => {
   return new Promise((reject, resolve) => {
       axios.patch(`${API_URL}/chatgroups/${id}/updateEmoji`,data,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(error => {
+          resolve(error)
+      })
+  })
+}
+// kick groups 
+export const kickGroups = async (data) => {
+  return new Promise((reject, resolve) => {
+      axios.post(`${API_URL}/groups/kickUsersGroups`,data,config)
       .then(res => {
           reject(res);
       })

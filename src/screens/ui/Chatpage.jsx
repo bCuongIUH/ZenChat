@@ -102,13 +102,7 @@ export const Chatpage = () => {
     }
   }, [route]);
 
-  useEffect(() => {
-    if (createdGroup) {
-      console.log("Thông tin nhóm:", createdGroup);
-    }
-  }, [createdGroup]);
-
-console.log("group của bạn ",groups);
+  
 
   useEffect(() => {
 
@@ -195,7 +189,9 @@ const getDisplayLastMessagesGroups = (messages) => {
   //     item
   //   });
   // };
-
+  socket.on(user.email, roomSocket => {
+    updateListRooms(roomSocket.rooms)
+});
   const handleGroupPress = (group) => {
     nav.navigate("MessageGroup", { group });
   };
@@ -303,12 +299,6 @@ const getDisplayLastMessagesGroups = (messages) => {
 
 
 
-groups.forEach((group) => {
-  console.log('Group ID:', group._id); // Lấy ID của nhóm
-  console.log('Group Avatar:', group.avtGroups); // Lấy đường dẫn avatar của nhóm
-  console.log('Group Name:', group.nameGroups); // Lấy tên của nhóm
- 
-});
 useEffect(() => {
   if (searchStarted || searchText === "") {
     if (searchText === "") {
@@ -323,6 +313,167 @@ useEffect(() => {
 }, [searchStarted, searchText, selectedFunction]);
 
 
+
+//socket
+useEffect(() => {
+  socket.on('connected', () => console.log('Connected'));
+  socket.on(user.email, roomSocket => {
+      setRooms(prevRooms => [...prevRooms, roomSocket]);
+
+  })
+  socket.on(user.email, roomSocket => {
+      updateListRooms(roomSocket.rooms)
+  });
+  socket.on(`createGroups${user.email}`, data => {
+      setGroups(prevGroups => [...prevGroups, data])
+  })
+  socket.on(`deleteGroups${user.email}`, data => {
+      setGroups(prevGroups => {
+              return prevGroups.filter(item => item._id !== data._id)
+      })
+  })
+  socket.on(`leaveGroups${user.email}`, data => {
+      if (data.userLeave === user.email) {
+           setGroups(prevGroups => {
+              return prevGroups.filter(item => item._id !== data.groupsUpdate._id)
+          })
+      } else {
+          setGroups(prevGroups => {
+              const updatedGroups = prevGroups.map(room => {
+                  if (room === undefined || data.groupsUpdate=== undefined) {
+                      return room;
+                  }
+                  if (room._id === data.groupsUpdate._id) {
+                      return data.groupsUpdate;
+                  }
+                  return room;
+              });
+              return updatedGroups;
+          })
+      }
+     
+  })
+  socket.on(`unfriends${user.email}`, data => {
+      if (data.reload === false) {
+          setRooms(prevRooms => {
+              // Cập nhật phòng đã được cập nhật
+              return prevRooms.filter(item => item._id !== data.roomsUpdate)
+          });  
+          navigate('/page');
+      }
+      else {
+          // alert(`Người dùng ${data.emailUserActions} đã hủy kết bạn`)
+          setErrorMessage(`Người dùng ${data.emailUserActions} đã hủy kết bạn`);
+          setShowErrorModal(true); // Hiển thị modal error
+
+          setTimeout(() => {
+              setShowErrorModal(false);
+          }, 2000);
+          setRooms(prevRooms => {
+              // Cập nhật phòng đã được cập nhật
+             return prevRooms.filter(item => item._id !== data.roomsUpdate)
+          }); 
+          navigate('/page');
+      }
+  })
+  socket.on(`undo${user.email}`, data => {
+      setRooms(prevRooms => {
+          // Cập nhật phòng đã được cập nhật
+         return prevRooms.filter(item => item._id !== data.roomsUpdate)
+      }); 
+      navigate('/page');
+  })
+  socket.on(`createMessageGroups${user.email}`, (data) => {
+      setGroups(prevGroups => {
+          // Xóa nhóm cũ có cùng ID (nếu có) và thêm nhóm mới từ dữ liệu socket
+          const filteredGroups = prevGroups.filter(item => item._id !== data.groups._id);
+          return [data.groups, ...filteredGroups];
+      });
+  })
+  socket.on(`deleteLastMessagesGroups${user.email}`, (data) => {
+      setGroups(prevGroups => {
+          // Xóa nhóm cũ có cùng ID (nếu có) và thêm nhóm mới từ dữ liệu socket
+          const filteredGroups = prevGroups.filter(item => item._id !== data.groupsUpdate._id);
+          return [data.groupsUpdate, ...filteredGroups];
+      });
+  })
+  socket.on(`recallLastMessagesGroups${user.email}`, (data) => {
+      if (data) {
+          setGroups(prevGroups => {
+              const updatedGroups = prevGroups.map(room => {
+                  if (room === undefined || data.groupsUpdate=== undefined) {
+                      return room;
+                  }
+                  if (room._id === data.groupsUpdate._id) {
+                      return data.groupsUpdate;
+                  }
+                  return room;
+              });
+              return updatedGroups;
+          })
+      }
+      
+  })
+  socket.on(`attendMessagesGroup${user.email}`, (data) => {
+      if (data) {
+          setGroups(prevGroups => {
+              const updatedGroups = prevGroups.map(room => {
+                  if (room === undefined || data.groupsUpdate=== undefined) {
+                      return room;
+                  }
+                  if (room._id === data.groupsUpdate._id) {
+                      return data.groupsUpdate;
+                  }
+                  return room;
+              });
+              return updatedGroups;
+          })
+      }
+  })
+  socket.on(`attendMessagesGroupsss${user.email}`, (data) => {
+      if (data) {
+          setGroups(prevGroups =>[data.groupsUpdate, ...prevGroups])
+      }
+  })
+  socket.on(`feedBackLastMessagesGroup${user.email}`, (data) => {
+      setGroups(prevGroups => {
+          // Xóa nhóm cũ có cùng ID (nếu có) và thêm nhóm mới từ dữ liệu socket
+          const filteredGroups = prevGroups.filter(item => item._id !== data.groups._id);
+          return [data.groups, ...filteredGroups];
+      });
+  })
+  socket.on(`updateKickGroup${user.email}`, data => {
+      console.log(data);
+      if (data.userKicked === user.email) {
+          console.log(`Đã rơi vào 1 ${data.groupsUpdate._id}`);
+           setGroups(prevGroups => {
+              return prevGroups.filter(item => item._id !== data.groupsUpdate._id)
+          })
+      } else {
+          console.log(`Đã rơi vào 2 ${data.groupsUpdate._id}`);
+          setGroups(prevGroups => {
+              const updatedGroups = prevGroups.map(room => {
+                  if (room === undefined || data.groupsUpdate=== undefined) {
+                      return room;
+                  }
+                  if (room._id === data.groupsUpdate._id) {
+                      return data.groupsUpdate;
+                  }
+                  return room;
+              });
+              return updatedGroups;
+          })
+      }
+     
+  })
+  return () => {
+      socket.off('connected');
+      socket.off(user.email);
+      socket.off(user.email)
+      socket.off(`createGroups${user.email}`)
+  
+  }
+}, [])
     return (
       <SafeAreaView style={styles.container}>
        <View style={styles.header}>
