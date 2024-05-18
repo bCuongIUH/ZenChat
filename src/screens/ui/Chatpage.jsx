@@ -19,8 +19,7 @@ import { getListRooms, getListGroups, deleteRooms } from "../../untills/api";
 import { AuthContext } from "../../untills/context/AuthContext";
 import { SocketContext } from "../../untills/context/SocketContext";
 import { useRoute } from '@react-navigation/native';
-// Import ItemGroup component if needed
-import ItemGroup from "./item-mess-group/ItemGroup";
+
 
 export const Chatpage = () => {
   const route = useRoute();
@@ -177,30 +176,23 @@ const getDisplayLastMessagesGroups = (messages) => {
   }
 
 }
-// console.log("",groups);
-  // const handleGroupPress = (item) => {
-  //   // Thực hiện điều hướng sang màn hình mess và truyền thông tin nhóm qua route params
-  //   nav.navigate("MessageGroup", {
-  //     // groupID: item._id, // ID của nhóm
-  //     // avtGroups: item.avtGroups, // Avatar của nhóm
 
-  //     // nameGroups: setTingNameGroups(item.nameGroups), // Tên của nhóm
-  //     // action : getDisplayLastMessagesGroups(item) 
-  //     item
-  //   });
-  // };
   socket.on(user.email, roomSocket => {
     updateListRooms(roomSocket.rooms)
 });
   const handleGroupPress = (group) => {
     nav.navigate("MessageGroup", { group });
   };
-  
-  
+ 
+
   const friend = (userId) => {
     return user.friends.some((friend) => friend._id === userId);
   };
-
+  
+  // const handleTodoItemPress = (room)=>{
+  //   nav.navigate("Messages",{room})
+  //  }
+ // chuyển màn hình
    const handleTodoItemPress = (item) => {
     const existingRoom = rooms.find((room) => {
       return (
@@ -225,7 +217,7 @@ const getDisplayLastMessagesGroups = (messages) => {
               nav.navigate("Message", {
 
                 id: existingRoom._id,
-                friend: existingRoom.friend,
+               // friend: existingRoom.friend,
                 homemess: existingRoom._id,
                 avatar: getDisplayUser(existingRoom).avatar,
                 nameRoom: existingRoom.fullName,
@@ -241,21 +233,97 @@ const getDisplayLastMessagesGroups = (messages) => {
                 receiver: existingRoom.recipient.sended,
                 recipient : getDisplayUser(existingRoom).sended,
 
-                friend: friend(item._id)
+                friend: friend(item._id),
+                room : item 
 
               });
-              //console.log(existingRoom._id);
-
-              // handleUnfriend(existingRoom)
+             
     }
 
   };
+  
+ 
 
-  socket.on("connected", () => console.log("Connected"));
-  socket.on(user?.email, (roomSocket) => {
-    setRooms((prevRooms) => [...prevRooms, roomSocket]);
-  });
+ 
 
+  useEffect(() => {
+        
+    socket.on(`updateLastMessages${user.email}`, lastMessageUpdate => {
+        setRooms(prevRooms => {
+            // Cập nhật phòng đã được cập nhật
+            return prevRooms.map(room => {
+                if (room === undefined || lastMessageUpdate === undefined) {
+                    return room;
+                }
+                if (room._id === lastMessageUpdate._id) {
+
+                    return lastMessageUpdate;
+                }
+                return room;
+            });
+        });
+
+    })
+    socket.on(`updateLastMessagesed${user.email}`, lastMessageUpdate => {
+        setRooms(prevRooms => {
+            // Cập nhật phòng đã được cập nhật
+            return prevRooms.map(room => {
+                if (room === undefined || lastMessageUpdate === undefined) {
+                    return room;
+                }
+                if (room._id === lastMessageUpdate._id) {
+
+                    return lastMessageUpdate;
+                }
+                return room;
+            });
+        });
+    })
+    return () => {
+        socket.emit("onOffline", { user: user })
+        socket.off(`updateLastMessages${user.email}`)
+        socket.off(`updateLastMessagesed${user.email}`)
+    }
+}, [])
+
+useEffect(() => {
+    socket.on('connected', () => console.log('Connected'));
+    socket.on(`updateSendedFriend${user.email}`, roomsU => {
+        if (roomsU) {
+            setRooms(prevRooms => {
+                // Cập nhật phòng đã được cập nhật
+                return prevRooms.map(room => {
+                    if (room._id === roomsU._id) {
+                        return roomsU;
+                    }
+                    
+                    return room;
+                });
+            });  
+            
+            updateRoomFriend(roomsU);
+            
+        }
+        
+    })
+    socket.on(`updateAcceptFriendsGroups${user.email}`, data => {
+        if (data) {
+            setFriendCreateGroup(prevGroups => [...prevGroups, data])
+           
+        }
+    })
+    socket.on(`updateUnFriendsGroups${user.email}`, data => {
+        if (data) {
+            setFriendCreateGroup(prevGroups => prevGroups.filter(item => item._id !== data.roomsUpdate))
+        }
+    })
+    return () => {
+        socket.off('connected');
+        socket.off(`updateSendedFriend${user.email}`)
+        socket.off(`updateAcceptFriendsGroups${user.email}`)
+        socket.off(`updateUnFriendsGroups${user.email}`)
+    }
+},[])
   function handleMoreOptionsPress(user) {
     setSelectedUser(user);
     setIsFriend(friend(user._id));
@@ -295,9 +363,31 @@ const getDisplayLastMessagesGroups = (messages) => {
       socket.off("newRoomCreated");
     };
   }, [socket]);
+
   const [selectedFunction, setSelectedFunction] = useState("personal");
 
+    useEffect(() => {
+        const fetchData = async () => {
+            getListRooms()
+                .then(res => {
+                    // const filteredRooms = res.data.filter(room => room.lastMessageSent);
 
+                    // Chỉ setRooms với các object đã được lọc
+                    setRooms(res.data);
+                    // Chỉ setRooms với các object đã được lọc
+                    const roomsWithFriends = res.data.filter(room => room.friend === true);
+                    // Cập nhật state với các phòng đã lọc
+                    setFriendCreateGroup(roomsWithFriends);
+           
+                })
+                .catch(err => {
+                    console.log(err);
+                    console.log("Đã rơi zô đây");
+                })
+        }
+        fetchData();
+
+    }, [])
 
 useEffect(() => {
   if (searchStarted || searchText === "") {
@@ -359,7 +449,7 @@ useEffect(() => {
               // Cập nhật phòng đã được cập nhật
               return prevRooms.filter(item => item._id !== data.roomsUpdate)
           });  
-          navigate('/page');
+          nav.navigate('Chatpage')
       }
       else {
           // alert(`Người dùng ${data.emailUserActions} đã hủy kết bạn`)
@@ -373,16 +463,17 @@ useEffect(() => {
               // Cập nhật phòng đã được cập nhật
              return prevRooms.filter(item => item._id !== data.roomsUpdate)
           }); 
-          navigate('/page');
+       nav.navigate('Chatpage')
       }
   })
   socket.on(`undo${user.email}`, data => {
       setRooms(prevRooms => {
           // Cập nhật phòng đã được cập nhật
          return prevRooms.filter(item => item._id !== data.roomsUpdate)
-      }); 
-      navigate('/page');
+      });  
+      nav.navigate('Chatpage')
   })
+  //socket group
   socket.on(`createMessageGroups${user.email}`, (data) => {
       setGroups(prevGroups => {
           // Xóa nhóm cũ có cùng ID (nếu có) và thêm nhóm mới từ dữ liệu socket
@@ -602,10 +693,7 @@ useEffect(() => {
             >
                <Image source={ item.avtGroups } style={styles.itemImage} />
               <Text style={styles.itemName}>{item.nameGroups}</Text>
-              {/* <Text style={styles.itemName}>tên của nhóm</Text> */}
-
-              {/* <Image source={{ uri: item.avtGroups }} style={styles.groupAvatar} /> */}
-              {/* Bổ sung các phần tử khác cần thiết cho mỗi item nhóm */}
+        
             </TouchableOpacity>
           );
         } else {

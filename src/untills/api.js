@@ -1,6 +1,6 @@
 import axios from "axios";
 const config = { withCredentials: true };
-// const API_URL = "http://192.168.5.130:3050/api"; 
+// const API_URL = "http://172.28.117.95:3050/api"; 
 const API_URL = "http://localhost:3050/api";
 // đăng nhập / đăng ký / xác thực người dùng
 

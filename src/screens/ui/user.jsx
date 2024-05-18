@@ -16,6 +16,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
+import ItemInfo from "./item-info-user/itemInfo";
 
 export const User = () => {
   const nav = useNavigation();
@@ -39,7 +40,7 @@ export const User = () => {
   };
 
   const handleCreateChatPress = () => {
-    setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
+    setActionModalVisible(false); 
     nav.navigate("ItemAddFriend");
   };
 
@@ -91,8 +92,8 @@ export const User = () => {
       </View>
       {/* phần nội dung chính */}
       <View style={styles.content}>
-        <Text>nội dung chính nằm ở đây </Text>
         
+        <ItemInfo />
       </View>
 
       <StatusBar backgroundColor="gray" barStyle="dark-content" />

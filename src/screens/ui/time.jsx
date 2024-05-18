@@ -1,34 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   TextInput,
   TouchableOpacity,
-  Image,
+  Text,
   StyleSheet,
   SafeAreaView,
-  Modal,
-  Text,
   StatusBar,
-  TouchableWithoutFeedback,
   FlatList,
   Dimensions,
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome, AntDesign } from "@expo/vector-icons";
+import { Ionicons, FontAwesome, AntDesign, EvilIcons } from "@expo/vector-icons";
+import { AuthContext } from "../../untills/context/AuthContext";
 
-export const Time = () => {
+const Time = () => {
   const nav = useNavigation();
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isActionModalVisible, setActionModalVisible] = useState(false);
-  const [todoList, setTodoList] = useState([]);
-  const [filteredTodoList, setFilteredTodoList] = useState([]);
-
-  const [searchStarted, setSearchStarted] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [postText, setPostText] = useState("");
+  const { user } = useContext(AuthContext);
+  const fullName = user.fullName;
 
   const handleSearchIconPress = () => {
-    setSearchStarted(false);
+    setSearchText("");
     setIsSearching(!isSearching);
   };
 
@@ -37,7 +35,7 @@ export const Time = () => {
   };
 
   const handleCreateChatPress = () => {
-    setActionModalVisible(false); //này là sau khi thực hiện vào actionModel false thì nút nó tắt điii
+    setActionModalVisible(false);
     nav.navigate("ItemAddFriend");
   };
 
@@ -45,11 +43,102 @@ export const Time = () => {
     setActionModalVisible(false);
   };
 
-  const handleMainScreenPress = () => {
-    setIsSearching(false);
+  const savePostToAPI = async (post) => {
+    try {
+      const response = await fetch('https://65d5a412f6967ba8e3bc15a2.mockapi.io/Zen-Chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(post),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save post');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error saving post:', error);
+      throw error;
+    }
   };
 
-  
+  const handlePost = async () => {
+    if (postText.trim() !== "") {
+      const newPost = {
+        id: posts.length + 1,
+        text: postText,
+        likes: 0,
+        comments: [],
+        author: user.fullName,
+      };
+
+      try {
+        const savedPost = await savePostToAPI(newPost);
+        setPosts((prevPosts) => [...prevPosts, savedPost]);
+        setPostText("");
+      } catch (error) {
+        console.error('Error saving post:', error);
+      }
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    try {
+      const response = await fetch(`https://65d5a412f6967ba8e3bc15a2.mockapi.io/Zen-Chat/${postId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('https://65d5a412f6967ba8e3bc15a2.mockapi.io/Zen-Chat');
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts');
+        }
+        const data = await response.json();
+        setPosts(data);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const renderItem = ({ item }) => (
+    <View style={styles.postContainer}>
+      <Text style={styles.textInfo}>{item.author}</Text>
+      <Text>{item.text}</Text>
+      <View style={styles.postActions}>
+        <TouchableOpacity style={styles.actionButton}>
+          <AntDesign name="hearto" size={24} color="black" />
+          <Text style={styles.actionText}>Like: {item.likes}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton}>
+          <EvilIcons name="comment" size={24} color="black" />
+          <Text style={styles.actionText}>Comment</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.actionButton}>
+          <Text style={styles.actionText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={item.comments}
+        renderItem={({ item }) => <Text>{item}</Text>}
+        keyExtractor={(item, index) => index.toString()}
+      />
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -60,11 +149,7 @@ export const Time = () => {
               placeholder="Nhập từ khóa tìm kiếm"
               placeholderTextColor="gray"
               value={searchText}
-              onChangeText={(text) => {
-                setSearchStarted(true);
-                setSearchText(text);
-              }}
-              focusable={false}
+              onChangeText={setSearchText}
             />
           ) : null}
           <TouchableOpacity onPress={handleSearchIconPress}>
@@ -79,7 +164,6 @@ export const Time = () => {
               />
             )}
           </TouchableOpacity>
-
           <TouchableOpacity
             onPress={handleAddFriendPress}
             style={styles.addFriendButton}
@@ -89,32 +173,28 @@ export const Time = () => {
         </View>
       </View>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isActionModalVisible}
-        onRequestClose={handleModalClose}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalcontent}>
-            <TouchableOpacity
-              style={styles.modalbtn}
-              onPress={handleCreateChatPress}
-            >
-              <Text style={styles.modalOption}>Thêm nhật ký</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalbtn}
-              onPress={handleModalClose}
-            >
-              <Text style={styles.modalOption}>Hủy</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
       <View style={styles.content}>
-        <Text>nội dung chính nằm ở đây </Text>
+        <View style={styles.messageContainer}>
+          <Image
+            source={{ uri: user.avatar }}
+            style={styles.avatar}
+          />
+          <TextInput
+            placeholder="Hôm nay bạn thấy thế nào?"
+            placeholderTextColor="#ccc"
+            value={postText}
+            onChangeText={setPostText}
+            style={styles.input}
+          />
+        </View>
+        <TouchableOpacity onPress={handlePost} style={styles.postButton}>
+          <Text>Đăng</Text>
+        </TouchableOpacity>
+        <FlatList
+          data={posts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+        />
       </View>
 
       <StatusBar backgroundColor="gray" barStyle="dark-content" />
@@ -158,10 +238,10 @@ export const Time = () => {
     </SafeAreaView>
   );
 };
+
 const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   header: {
-    //width: "100%",
     width: width * 1,
     height: 80,
     paddingTop: 20,
@@ -171,22 +251,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    // width: "100%",
-    // height: "100%",
     width: width * 1,
     height: height * 1,
   },
   searchBarContainer: {
     position: "absolute",
     height: 50,
-    // width: "100%",
     width: width * 1,
     flexDirection: "row",
     padding: 10,
   },
   searchInput: {
     flex: 1,
-    // height: "80%",
     height: 35,
     backgroundColor: "white",
     borderRadius: 10,
@@ -202,76 +278,50 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     marginRight: 10,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  modalcontent: {
-    backgroundColor: "gray",
-    //height: "25%",
-    height: height * 0.25,
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 10,
-  },
-  modalOption: {
-    fontSize: 15,
-    color: "white",
-    fontWeight: "bold",
-  },
-  modalbtn: {
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-
-    height: 30,
-    width: width * 0.7,
-    backgroundColor: "#ff8c00",
-    margin: 5,
-  },
   content: {
     flex: 1,
-    // width: "100%",
     width: width * 1,
-  },
-  listContainer: {
     paddingHorizontal: 10,
     paddingTop: 10,
   },
-  itemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  input: {
     marginBottom: 10,
     padding: 10,
-    borderRadius: 5,
     borderWidth: 1,
     borderColor: "#ccc",
-    backgroundColor: "#f9f9f9",
+    borderRadius: 5,
   },
-  itemImage: {
-    width: 80,
-    height: 80,
-    marginRight: 10,
+  postButton: {
+    backgroundColor: "#ff8c00",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
   },
-  itemDetails: {
-    flex: 1,
+  postContainer: {
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 10,
   },
-  itemName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
+  postActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
   },
-  itemStatus: {
-    fontSize: 14,
-    color: "gray",
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionText: {
+    marginLeft: 5,
   },
   menuView: {
     flexDirection: "row",
-    position: "fixed",
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -286,6 +336,29 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
+  messageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    backgroundColor: 'white',
+    borderRadius: 25,
+    paddingLeft: 10,
+  },
+  textInfo:{
+    fontSize :18,
+    fontWeight: 'bold',
+    fontStyle :'italic'
+  }
 });
 
 export default Time;

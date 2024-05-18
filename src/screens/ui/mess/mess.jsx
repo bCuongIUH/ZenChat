@@ -20,12 +20,15 @@ export const Message = ({ route }) => {
     sender,
     recipient,
     idAccept,
+    room
   } = route.params;
-  console.log(friend,
+  console.log(
     receiver,
     sender,
     recipient,
-    idAccept,)
+    idAccept,
+  )
+
   const [messages, setMessages] = useState([]);
   const socket = useContext(SocketContext);
   const [texting, setTexting] = useState("");
@@ -66,8 +69,8 @@ useEffect(() => {
     if (data) {
       // Loại bỏ tin nhắn bằng cách filter, không cần gói trong mảng mới
       setMessages(prevMessages => prevMessages.filter(item => item._id !== data.idMessages));
-      // Sử dụng concat hoặc spread operator để thêm messages mới vào
-      setMessages(prevMessages => [...prevMessages, ...data.roomsUpdate.messages]);
+      
+    
     }
   });
   socket.on(`updatedMessage${id}`, data => {
@@ -108,9 +111,7 @@ const updateLastMessage = (updatedRoom) => {
   });
 };
 //
-console.log('====================================');
-console.log("tin nhắn dc gửi:",messages);
-console.log('====================================');
+
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -124,23 +125,66 @@ console.log('====================================');
   }, [id]);
 
   useEffect(() => {
-    const handleSocketEvents = () => {
-      socket.on("connected", () => console.log("Connected"));
-      socket.on(id, (messagesSocket) => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          messagesSocket.message,
-        ]);
-      });
-    };
+    socket.on('connected', () => console.log('Connected'));
+    socket.on(id, messagesSocket => {
+        setMessages(prevMessages => [...prevMessages, messagesSocket.message]);
+        updateLastMessage(messagesSocket.rooms);
+    })
+    socket.on(`deleteMessage${id}`, (data) => {
+      if (data) {
+        // Kiểm tra tin nhắn được xóa có phải là tin nhắn hiện tại không
+        if (data.idMessages === selectedMessage._id) {
+          // Xóa tin nhắn hiện tại nếu nó là tin nhắn được chọn
+          setSelectedMessage(null);
+        }
+        // Cập nhật danh sách tin nhắn
+        setMessages(prevMessages => prevMessages.filter(item => item._id !== data.idMessages));
+      }
+    });
+    socket.on(`updatedMessage${id}`, data => {
 
-    handleSocketEvents();
+        if (data) {
+            setMessages(data.messagesCN)
+            updateLastMessage(data.dataLoading.roomsUpdate)
+        }
+    })// updateRoomFriend(data)
+    socket.on(`acceptFriends${id}`, data => {
+        if (data) {
+            setAreFriends(true);
+            setDisplayMode('friend');
+            updateRoomFriend(data)
+        }
+        
+    })
+    socket.on(`updateSendedFriend${user.email}`, data => {
+        if (data) {
+            updateRoomFriend(data)
+        }
+    })
+    socket.on(`emoji${id}`, data => {
+        setMessages(preMessages => {
+            return preMessages.map(message => {
+                if (message === undefined || data.messagesUpdate === undefined) {
+                    return message;
+                }
+                if (message._id === data.messagesUpdate._id) {
 
+                    return data.messagesUpdate;
+                }
+                return message;
+            });
+        })
+    })
     return () => {
-      socket.off("connected");
-      socket.off(id);
-    };
-  }, [id, socket]);
+        socket.off('connected');
+        socket.off(id);
+        socket.off(`deleteMessage${id}`);
+        socket.off(`updatedMessage${id}`);
+        socket.off(`acceptFriends${id}`);
+        socket.off(`updateSendedFriend${user.email}`)
+        socket.off(`emoji${id}`)
+    }
+}, [id]);
 
   // /////////
   const scrollToBottom = () => {
@@ -399,30 +443,51 @@ const SendToMesageImage = (mm) => {
     setShowOptions(false); // Đóng options sau khi thực hiện hành động
   };
 
+  // Thêm hàm để gửi yêu cầu thu hồi tin nhắn
   const handleDeleteMessage = () => {
-    // Xử lý khi nhấn nút xóa tin nhắn
-    // Ví dụ:
-    const idLastMess = messages.slice(-1)[0]
+    const idLastMess = messages.slice(-1)[0];
     const dataDeleteMessages = {
       idMessages: messages[selectedMessageIndex]._id,
       idLastMessageSent: idLastMess._id,
       email: user.email
-    }
+    };
     deleteMessages(id, dataDeleteMessages)
       .then((res) => {
         if (res.data.response === "Bạn không phải là chủ tin nhắn") {
-          alert("Bạn không phải chủ tin nhắn nên không thể xóa")
+          alert("Bạn không phải chủ tin nhắn nên không thể xóa");
         }
         if (res.status !== 200) {
-          alert("Không thể xóa được tin nhắn")
+          alert("Không thể xóa được tin nhắn");
           return;
         }
+        // Cập nhật trạng thái tin nhắn đã bị thu hồi
+        const updatedMessages = messages.map((message, index) => {
+          if (index === selectedMessageIndex) {
+            return { ...message, isRecalled: true };
+          }
+          return message;
+        });
+        setMessages(updatedMessages);
       })
       .catch((err) => {
-        alert("Lỗi hệ thống")
+        alert("Lỗi hệ thống");
       });
     setShowOptions(false); // Đóng options sau khi thực hiện hành động
+    socket.emit("deleteMessage", { idMessages: id });
   };
+  
+  
+  
+
+// Thêm hàm để hiển thị tin nhắn đã được thu hồi
+const messageRemoved = (content) => {
+  if (content === "") {
+    return "Tin nhắn đã được thu hồi";
+  } else {
+    return content;
+  }
+};
+
 
   const handleShowOptions = (index) => {
     // Nếu đã mở rồi thì đóng lại
@@ -445,7 +510,7 @@ const SendToMesageImage = (mm) => {
     }, [friend]);
 
     useEffect(() => {
-      console.log(friend);
+      
       // Xác định trạng thái hiển thị dựa trên các điều kiện
       if (friend === true) {
         setDisplayMode("friend");
@@ -575,15 +640,10 @@ const SendToMesageImage = (mm) => {
       console.error('Lỗi khi chọn file:', error);
     }
   };
-  const messageRemoved = (content) => {
-    if (content === "") {
-      return "Tin nhắn đã được thu hồi"
-    }
-    else {
-      return content;
-    }
-  }
 
+const handleCall=()=>{
+  nav.navigate('ItemCallMess', {room})
+}
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -608,7 +668,7 @@ const SendToMesageImage = (mm) => {
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.headerButton}>
-              <Ionicons name="call" size={24} color="black" />
+              <Ionicons name="call" size={24} color="black" onPress={handleCall}/>
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerButton}>
               <FontAwesome name="video-camera" size={24} color="black" />
@@ -772,37 +832,38 @@ const styles = StyleSheet.create({
   messageContent: {
     flex: 1,
     //flexWrap: 'wrap',
-
+    
   },
   message: {
-    flexDirection: 'row',
-    marginVertical: 5,
-    //maxWidth: "80%",
-    marginTop:5,
-
+    flexDirection: "row",
+    
   },
-  messageContainerReceiver:{
-  backgroundColor: 'silver',
-  marginTop: 5,
-  borderRadius :'10',
-  maxWidth: '50%',
-  padding: 10,
+  messageContainerReceiver: {
+    backgroundColor: "silver",
+    marginTop: 5,
+    borderRadius: 10,
+    maxWidth: "50%",
+    //padding: 10,
+    alignSelf: "flex-start", 
   },
-  messageContainerAuthor:{
+  messageContainerAuthor: {
     backgroundColor: "#ffa500",
     marginTop: 5,
-    borderRadius :'10',
-    maxWidth: '50%',
-    padding: 10,
+    borderRadius: 10,
+    maxWidth: "50%",
+    //padding: 10,
+    
+    alignSelf: "flex-end",
   },
   messageAuthor: {
-    alignSelf: "flex-end",
-
+    //alignSelf: "flex-end",
+    justifyContent:'flex-end',
+   
   },
   messageReceiver: {
-    alignSelf: 'flex-start',
-
+    alignSelf: "flex-start",
   },
+
 
   avatarContainer: {
     marginRight: 10,
@@ -907,561 +968,3 @@ const styles = StyleSheet.create({
 });
 
 export default Message;
-
-// import React, { useState, useContext, useEffect, useRef } from "react";
-// import {
-//   View,
-//   Text,
-//   TextInput,
-//   ScrollView,
-//   TouchableOpacity,
-//   StyleSheet,
-//   Alert,
-//   Image,
-//   Platform,
-//   Linking,
-// } from "react-native";
-// import { SocketContext } from "../../../untills/context/SocketContext";
-// import {
-//   getRoomsMessages,
-//   createMessage,
-//   acceptFriends,
-//   createMessagesFile,
-//   deleteMessages,
-// } from "../../../untills/api";
-// import { Ionicons, FontAwesome, Entypo, AntDesign } from "@expo/vector-icons";
-// import { AuthContext } from "../../../untills/context/AuthContext";
-// import { useNavigation } from "@react-navigation/native";
-// import * as DocumentPicker from "expo-document-picker";
-// import * as ImagePicker from "expo-image-picker";
-// import * as FilePicker from "expo-document-picker";
-// import * as FileSystem from "expo-file-system";
-// import { KeyboardAvoidingView } from "react-native";
-
-// import { ActivityIndicator } from "react-native";
-
-// export const Message = ({ route }) => {
-//   const { id, fullName, friend, receiver, sender, recipient, idAccept } =
-//     route.params;
-
-//   const [messages, setMessages] = useState([]);
-//   const socket = useContext(SocketContext);
-//   const [texting, setTexting] = useState("");
-//   const messRef = useRef();
-//   const { user } = useContext(AuthContext);
-//   const nav = useNavigation();
-//   const [selectedMessageIndex, setSelectedMessageIndex] = useState(null);
-//   const [showOptions, setShowOptions] = useState(false);
-//   const [displayMode, setDisplayMode] = useState("none");
-//   const [areFriends, setAreFriends] = useState(false);
-//   const [isActive, setIsActive] = useState(false);
-//   const [sendFile, setSendFile] = useState([]);
-//   const [sendImage, setSendImage] = useState([]);
-//   const fileInputRef = useRef();
-//   const [clickedMessage, setClickedMessage] = useState(null);
-//   //const fullName = route.params && route.params.full_name;
-
-//   useEffect(() => {
-//     const RoomMessages = {
-//       roomsId: id,
-//     };
-//     getRoomsMessages(RoomMessages)
-//       .then((data) => {
-//         setMessages(data.data);
-//       })
-//       .catch((err) => {
-//         console.log(err);
-//       });
-//   }, [id]);
-
-//   useEffect(() => {
-//     socket.on(`createMessage${id}`, (messagesSocket) => {
-//       setMessages((prevMessages) => [...prevMessages, messagesSocket.message]);
-//     });
-
-//     socket.on(`deleteMessage${id}`, (data) => {
-//       if (data) {
-//         setMessages((prevMessages) =>
-//           prevMessages.filter((item) => item._id !== data.idMessages)
-//         );
-//         setMessages((prevMessages) => [
-//           ...prevMessages,
-//           ...data.roomsUpdate.messages,
-//         ]);
-//       }
-//     });
-
-//     socket.on(`updatedMessage${id}`, (data) => {
-//       if (data) {
-//         setMessages(data.messagesCN);
-//       }
-//     });
-
-//     socket.on(`acceptFriends${id}`, (data) => {
-//       if (data) {
-//         setAreFriends(true);
-//         setDisplayMode("friend");
-//       }
-//     });
-
-//     return () => {
-//       socket.off(`createMessage${id}`);
-//       socket.off(`deleteMessage${id}`);
-//       socket.off(`updatedMessage${id}`);
-//       socket.off(`acceptFriends${id}`);
-//     };
-//   }, [id, socket]);
-
-//   useEffect(() => {
-//     const fetchMessages = async () => {
-//       try {
-//         const data = await getRoomsMessages({ roomsId: id });
-//         setMessages(data.data);
-//       } catch (error) {
-//         console.log(error);
-//       }
-//     };
-//     fetchMessages();
-//   }, [id]);
-
-//   useEffect(() => {
-//     const handleSocketEvents = () => {
-//       socket.on("connected", () => console.log("Connected"));
-//       socket.on(id, (messagesSocket) => {
-//         setMessages((prevMessages) => [
-//           ...prevMessages,
-//           messagesSocket.message,
-//         ]);
-//       });
-//     };
-
-//     handleSocketEvents();
-
-//     return () => {
-//       socket.off("connected");
-//       socket.off(id);
-//     };
-//   }, [id, socket]);
-
-//   const scrollToBottom = () => {
-//     if (messRef.current) {
-//       messRef.current.scrollToEnd({ animated: true });
-//     }
-//   };
-
-//   useEffect(() => {
-//     scrollToBottom();
-//   }, [messages]);
-
-//   const handleTexting = (text) => {
-//     setTexting(text);
-//   };
-
-//   const handleSendMess = () => {
-//     if (texting === "") {
-//       Alert.alert("Please enter a message");
-//       return;
-//     } else if (!id) {
-//       Alert.alert("Cannot find the room you want to send a message to");
-//       return;
-//     } else {
-//       setIsActive(true);
-//       if (sendFile.length > 0) {
-//         const formData = new FormData();
-//         formData.append("file", sendFile[0].file);
-
-//         createMessagesFile(formData)
-//           .then((resFile) => {
-//             const data1 = {
-//               content: resFile.data,
-//               roomsID: id,
-//             };
-
-//             createMessage(data1)
-//               .then((res) => {
-//                 setTexting("");
-//                 setSendFile([]);
-//                 if (res.data.status === 400) {
-//                   Alert.alert(
-//                     "You and this person are no longer friends so you cannot message each other"
-//                   );
-//                 }
-//                 setTimeout(() => {
-//                   setIsActive(false);
-//                 }, 300);
-//               })
-//               .catch((err) => {
-//                 if (err.status === 400) {
-//                   Alert.alert("Server error");
-//                 }
-//               });
-//           })
-//           .catch((err) => {
-//             console.log(err);
-//           });
-//       } else if (sendImage.length > 0) {
-//         const formData1 = new FormData();
-//         formData1.append("file", sendImage[0].file);
-
-//         createMessagesFile(formData1)
-//           .then((resFile) => {
-//             const data2 = {
-//               content: resFile.data,
-//               roomsID: id,
-//             };
-//             createMessage(data2)
-//               .then((res) => {
-//                 setTexting("");
-//                 setSendImage([]);
-//                 if (res.data.status === 400) {
-//                   Alert.alert(
-//                     "You and this person are no longer friends so you cannot message each other"
-//                   );
-//                 }
-//                 setTimeout(() => {
-//                   setIsActive(false);
-//                 }, 300);
-//               })
-//               .catch((err) => {
-//                 if (err.status === 400) {
-//                   Alert.alert("Server error");
-//                 }
-//               });
-//           })
-//           .catch((err) => {
-//             console.log(err);
-//           });
-//       } else {
-//         const data = {
-//           content: texting,
-//           roomsID: id,
-//         };
-//         createMessage(data)
-//           .then((res) => {
-//             setTexting("");
-//             if (res.data.status === 400) {
-//               Alert.alert(
-//                 "You and this person are no longer friends so you cannot message each other"
-//               );
-//             }
-//             setTimeout(() => {
-//               setIsActive(false);
-//             }, 300);
-//           })
-//           .catch((err) => {
-//             if (err.status === 400) {
-//               Alert.alert("Server error");
-//             }
-//           });
-//       }
-//     }
-//   };
-
-//   useEffect(() => {
-//     clearTimeout(clickedMessage);
-//   }, [texting]);
-
-//   useEffect(() => {
-//     let timer;
-//     if (clickedMessage) {
-//       timer = setTimeout(() => {
-//         setClickedMessage(null);
-//       }, 2000);
-//     }
-//     return () => clearTimeout(timer);
-//   }, [clickedMessage]);
-
-//   const onPickFile = async () => {
-//     try {
-//       const file = await DocumentPicker.getDocumentAsync();
-//       if (file.type !== "cancel") {
-//         const fileData = {
-//           uri: file.uri,
-//           type: file.type,
-//           name: file.name,
-//         };
-//         setSendFile([{ file: fileData }]);
-//       }
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   };
-
-//   const onPickImage = async () => {
-//     try {
-//       const { status } =
-//         await ImagePicker.requestMediaLibraryPermissionsAsync();
-//       if (status !== "granted") {
-//         Alert.alert(
-//           "Sorry, we need camera roll permissions to make this work!"
-//         );
-//         return;
-//       }
-//       const result = await ImagePicker.launchImageLibraryAsync({
-//         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//         allowsEditing: true,
-//         aspect: [4, 3],
-//         quality: 1,
-//       });
-
-//       if (!result.cancelled) {
-//         const image = {
-//           uri: result.uri,
-//           type: "image/jpeg",
-//           name: result.uri.split("/").pop(),
-//         };
-//         setSendImage([{ file: image }]);
-//       }
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   };
-
-//   const onOpenFilePicker = () => {
-//     fileInputRef.current.click();
-//   };
-
-//   const onFileInputChange = (event) => {
-//     const file = event.target.files[0];
-//     if (file) {
-//       const fileData = {
-//         uri: URL.createObjectURL(file),
-//         type: file.type,
-//         name: file.name,
-//       };
-//       setSendFile([{ file: fileData }]);
-//     }
-//   };
-
-//   const onImageInputChange = (event) => {
-//     const file = event.target.files[0];
-//     if (file) {
-//       const reader = new FileReader();
-//       reader.onload = (e) => {
-//         const image = {
-//           uri: e.target.result,
-//           type: file.type,
-//           name: file.name,
-//         };
-//         setSendImage([{ file: image }]);
-//       };
-//       reader.readAsDataURL(file);
-//     }
-//   };
-
-//   const onMessageLongPress = (index) => {
-//     setSelectedMessageIndex(index);
-//     setShowOptions(true);
-//   };
-
-//   const onDeleteMessage = async () => {
-//     const messageId = messages[selectedMessageIndex]._id;
-//     try {
-//       await deleteMessages(messageId);
-//       setShowOptions(false);
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   };
-//   const isCurrentUser = (message) => {
-//     return message.user && message.user.id === currentUser.id;
-//   };
-
-//   const renderMessages = () => {
-//     return messages.map((message, index) => {
-//       const senderFullName = message.user && message.user.fullName;
-//       return (
-//         <TouchableOpacity
-//           key={index}
-//           onLongPress={() => onMessageLongPress(index)}
-//         >
-//           <View style={[styles.messageBubble]}>
-//             <Text style={[styles.sender]}>{senderFullName}</Text>
-//             <Text style={[styles.messageText]}>{message.content}</Text>
-//             <Text style={[styles.time]}>
-//               {new Date(message.createdAt).toLocaleTimeString()}
-//             </Text>
-//           </View>
-//         </TouchableOpacity>
-//       );
-//     });
-//   };
-  
-//   return (
-//     <View style={styles.container}>
-//       {/* Header */}
-//       <View style={styles.header}>
-//         <TouchableOpacity onPress={() => nav.goBack()} style={styles.goBackButton}>
-//           <AntDesign name="arrowleft" size={24} color="black" />
-//         </TouchableOpacity>
-//         <View style={styles.headerContent}>
-//           <Text style={styles.fullName}>{fullName}</Text>
-//           {friend ? (
-//             <Text style={[styles.friendStatus, styles.italic]}>Bạn bè</Text>
-//           ) : (
-//             <Text style={[styles.strangerStatus, styles.italic]}>Người lạ</Text>
-//           )}
-//         </View>
-//         <View style={styles.headerRight}>
-//           <TouchableOpacity style={styles.headerButton}>
-//             <Ionicons name="call" size={24} color="black" />
-//           </TouchableOpacity>
-//           <TouchableOpacity style={styles.headerButton}>
-//             <FontAwesome name="video-camera" size={24} color="black" />
-//           </TouchableOpacity>
-//           <TouchableOpacity style={styles.headerButton}>
-//             <Entypo name="menu" size={24} color="black" />
-//           </TouchableOpacity>
-//         </View>
-//       </View>
-
-//       {/* Hiển thị tin nhắn */}
-//       <ScrollView ref={messRef} contentContainerStyle={{ flexGrow: 1 }}>
-//         {messages.map((message, index) => {
-//           const senderFullName = message.user && message.user.fullName;
-//           const isUser = isCurrentUser(message);
-//           const avatar = message.user && message.user.avatar; // Đường dẫn đến avatar của người gửi tin nhắn
-//           return (
-//             <TouchableOpacity key={index}>
-//               <View
-//                 style={[
-//                   styles.messageBubble,
-//                   isUser ? styles.messageBubbleRight : styles.messageBubbleLeft,
-//                 ]}
-//               >
-//                 {!isUser && (
-//                   <View style={styles.avatarContainer}>
-//                     <Image source={{ uri: avatar }} style={styles.avatar} />
-//                   </View>
-                 
-//                 )}
-//                 {!isUser && <Text style={styles.sender}>{senderFullName}</Text>}
-//                 <Text style={styles.messageText}>{message.content}</Text>
-//                 <Text style={styles.time}>
-//                   {new Date(message.createdAt).toLocaleTimeString()}
-//                 </Text>
-//               </View>
-              
-//             </TouchableOpacity>
-//           );
-//         })}
-        
-//       </ScrollView>
-
-//       {/* Phần input tin nhắn */}
-//       <View style={styles.inputContainer}>
-//         <TouchableOpacity onPress={onPickFile}>
-//           <FontAwesome name="paperclip" size={24} color="#000" style={styles.iconStyle} />
-//         </TouchableOpacity>
-//         <TextInput
-//           style={styles.textInput}
-//           placeholder="Nhập tin nhắn..."
-//           value={texting}
-//           onChangeText={handleTexting}
-//           multiline
-//         />
-//         <TouchableOpacity onPress={handleSendMess}>
-//           <Ionicons name="send" size={24} color="black" style={styles.iconStyle} />
-//         </TouchableOpacity>
-//       </View>
-//       {/* Các phần còn lại của giao diện */}
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#fff",
-//   },
-//   header: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     padding: 10,
-//     backgroundColor: "#ff8c00",
-//     height: 80, // Chiều cao của thanh header
-//   },
-//   goBackButton: {
-//     marginRight: 10, // Khoảng cách giữa nút quay lại và nội dung header
-//   },
-//   headerContent: {
-//     flexDirection: "column", // Thay đổi thành column
-//     alignItems: "flex-start", // Đảm bảo căn trái cho nội dung
-//     flex: 1, // Chia phần còn lại của header
-//   },
-//   headerRight: {
-//     flexDirection: "row",
-//   },
-//   headerButton: {
-//     marginLeft: 5,
-//     marginRight: 10,
-//   },
-//   fullName: {
-//     fontSize: 16,
-//     fontWeight: "bold",
-//     color: "black",
-//   },
-//   friendStatus: {
-//     fontSize: 14,
-//     fontWeight: "bold",
-//     color: "black",
-//     fontStyle: "italic",
-//   },
-//   strangerStatus: {
-//     fontSize: 14,
-//     fontWeight: "bold",
-//     color: "black",
-//     fontStyle: "italic",
-//   },
-//   inputContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     padding: 10,
-//     borderTopWidth: 0.5,
-//     borderTopColor: "#dedede",
-//   },
-//   messageBubbleRight:{
-//     backgroundColor :'#ffa500' // Màu nền cho tin nhắn của người dùng
-//   },
-//   textInput: {
-//     flex: 1,
-//     paddingVertical: Platform.OS === "android" ? 5 : 15,
-//     paddingHorizontal: 20,
-//     backgroundColor: "#ececec",
-//     borderRadius: 30,
-//     marginRight: 10,
-//   },
-//   iconStyle: {
-//     marginLeft: 10,
-//   },
-//   messageBubble: {
-//     backgroundColor: "#fff",
-//     padding: 10,
-//     marginVertical: 5,
-//     marginHorizontal: 10,
-//     borderRadius: 20,
-//     alignSelf: "flex-start",
-//     maxWidth: "80%",
-//   },
-//   sender: {
-//     fontWeight: "bold",
-//     marginBottom: 5,
-//   },
-//   messageText: {},
-//   time: {
-//     alignSelf: "flex-end",
-//     fontSize: 10,
-//     color: "#A9A9A9",
-//     marginTop: 5,
-//   },
-//   avatarContainer: {
-//     marginRight: 10,
-//   },
-//   avatar: {
-//     width: 40,
-//     height: 40,
-//     borderRadius: 20,
-//   },
-// });
-
-// export default Message;

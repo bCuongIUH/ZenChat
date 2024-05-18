@@ -32,6 +32,8 @@ import MessageGroup from "./src/screens/ui/mess/messGroup";
 import ItemMenuGroups from "./src/screens/ui/item-mess-group/itemMenuGroups";
 import ItemAddMemberGroups from "./src/screens/ui/item-mess-group/itemAddMenberGroups";
 import ItemMemberGroup from "./src/screens/ui/item-mess-group/itemMemberGroup";
+import Messages from "./src/screens/ui/mess/Messages";
+import ItemCallMess from "./src/screens/ui/call/ItemCallMess";
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -88,7 +90,8 @@ function App() {
               <Stack.Screen name="ItemMenuGroups" component={ItemMenuGroups} />
               <Stack.Screen name="ItemAddMemberGroups" component={ItemAddMemberGroups} />
               <Stack.Screen name="ItemMemberGroup" component={ItemMemberGroup} />
-              
+              <Stack.Screen name="Messages" component={Messages} />
+              <Stack.Screen name="ItemCallMess" component={ItemCallMess} />
               <Stack.Screen name="ItemAddFriend">
                 {() => (
                   //<RequireAuth>

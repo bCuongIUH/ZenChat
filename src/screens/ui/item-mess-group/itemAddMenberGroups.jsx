@@ -1,10 +1,12 @@
+// Import useState
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../../untills/context/AuthContext';
 import { attendGroup } from '../../../untills/api';
 import Checkbox from 'expo-checkbox';
 import { SocketContext } from '../../../untills/context/SocketContext';
+import { FontAwesome } from '@expo/vector-icons'; 
 
 const ItemAddMemberGroups = ({ route }) => {
   const { group } = route.params;
@@ -13,11 +15,25 @@ const ItemAddMemberGroups = ({ route }) => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [participants, setParticipants] = useState([]);
   const socket = useContext(SocketContext);
+  const [friendInGroup, setFriendInGroup] = useState({});
+
+  useEffect(() => {
+    if (group === undefined) {
+      return;
+    }
+    // Lưu trữ danh sách các số điện thoại của các thành viên trong nhóm vào một mảng
+    const participantPhoneNumbers = group.participants.map(participant => participant.phoneNumber);
+    setParticipants(participantPhoneNumbers);
+  }, [group]);
+
   const handleCheckboxChange = (phoneNumber) => {
-    if (selectedItems.includes(phoneNumber)) {
-      setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item !== phoneNumber));
-    } else {
-      setSelectedItems(prevSelectedItems => [...prevSelectedItems, phoneNumber]);
+    // Kiểm tra xem số điện thoại của thành viên có trong danh sách thành viên của nhóm không
+    if (!participants.includes(phoneNumber)) {
+      if (selectedItems.includes(phoneNumber)) {
+        setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item !== phoneNumber));
+      } else {
+        setSelectedItems(prevSelectedItems => [...prevSelectedItems, phoneNumber]);
+      }
     }
   };
 
@@ -43,107 +59,34 @@ const ItemAddMemberGroups = ({ route }) => {
       });
   };
 
-useEffect(() => {
-  if (group === undefined) {
-      return;
-  }
-  socket.on('connected', () => console.log('Connected'));
-  socket.on(`leaveGroupsId${group._id}`, (data) => {
-      if (data.userLeave !== user.email) {
-          setParticipants(data.groupsUpdate.participants)
-      }
-      
-  })
-  socket.on(group._id, (data) => {
-      setMessagesGroups(prevMessages => [...prevMessages, data.message])
-  })
-  socket.on(`emojiGroup${group._id}`, data => {
-      setMessagesGroups(prevMessagesGroup => {
-          return prevMessagesGroup.map(message => {
-              if (message === undefined || data.messagesUpdate === undefined) {
-                  return message;
-              }
-              if (message._id === data.messagesUpdate._id) {
-
-                  return data.messagesUpdate;
-              }
-              return message;
-          })
-      })
-  })
-  socket.on(`deleteMessageGroup${group._id}`, (data) => {
-      if (data) {
-          // Loại bỏ tin nhắn bằng cách filter, không cần gói trong mảng mới
-          setMessagesGroups(prevMessages => prevMessages.filter(item => item._id !== data.idMessages));
-
-      }
-  }) 
-  socket.on(`recallMessageGroup${group._id}`, data => {
-      if (data) {
-          setMessagesGroups(preMessagesGroups=> {
-          return preMessagesGroups.map(message => {
-              if (message === undefined || data.messagesGroupUpdate === undefined) {
-                  return message;
-              }
-              if (message._id === data.messagesGroupUpdate._id) {
-
-                  return data.messagesGroupUpdate;
-              }
-              return message;
-              })
-          })
-      }
-      
-  })
-  socket.on(`attendGroup${group._id}`, (data) => {
-      if (data) {
-         setParticipants(data.groupsUpdate.participants) 
-      }
-      
-  })
-  socket.on(`feedBackGroup${group._id}`, (data) => {
-      setMessagesGroups(prevMessages => [...prevMessages, data.message])
-  })
-  socket.on(`kickOutGroup${group._id}` , (data) => {
-      setParticipants(data.groupsUpdate.participants)
-  })
-  socket.on(`updateGroup${group._id}`, data => {
-      setTam(data.avtGroups)
-      setUpdateImageGroup(data.avtGroups)
-      setNameGroup(data.nameGroups)
-      setNameOfGroups(data.nameGroups)
-  })
-  return () => {
-      
-      socket.off(`leaveGroupsId${group._id}`)
-      socket.off(group._id)
-      socket.off(`emojiGroup${group._id}`)
-      socket.off(`deleteMessageGroup${group._id}`)
-      socket.off(`recallMessageGroup${group._id}`)
-      socket.off(`attendGroup${group._id}`)
-      socket.off(`feedBackGroup${group._id}`)
-      socket.off(`kickOutGroup${group._id}`)
-      socket.off(`updateGroup${group._id}`)
-  }
-},[socket, group])
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Thêm thành viên</Text>
+      <View style={styles.header}>
+        {/* Go back button */}
+        <TouchableOpacity style={styles.goBackButton} onPress={nav.goBack}>
+          <FontAwesome name="angle-left" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Quay lại</Text>
+      </View>
       <FlatList
-          data={user.friends}
-          keyExtractor={(item) => item.phoneNumber} 
-          renderItem={({ item }) => (
-            
-            <View key={item._id} style={styles.checkboxContainer}>
-              <Checkbox
-                value={selectedItems.includes(item.phoneNumber)}
-                onValueChange={() => handleCheckboxChange(item.phoneNumber)}
-              />
-              <Text style={styles.friendName}>{item.fullName}</Text>
-            </View>
-          )}
-        />
-
+        data={user.friends}
+        keyExtractor={(item) => item.phoneNumber} 
+        renderItem={({ item }) => (
+          <View key={item._id} style={styles.checkboxContainer}>
+            <Checkbox
+              value={selectedItems.includes(item.phoneNumber)}
+              onValueChange={() => handleCheckboxChange(item.phoneNumber)}
+              disabled={participants.includes(item.phoneNumber)} // Tắt chức năng chọn nếu thành viên đã có trong nhóm
+            />
+            <Image
+              source={item.avatar}
+              style={styles.avatar}
+            />
+            <Text style={styles.friendName}>{item.fullName}</Text>
+            {participants.includes(item.phoneNumber) && <Text>Đã trong nhóm</Text>}
+          </View>
+        )}
+      />
       <TouchableOpacity style={styles.addButton} onPress={addMembersToGroup}>
         <Text style={styles.addButtonText}>Thêm</Text>
       </TouchableOpacity>
@@ -155,6 +98,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  goBackButton: {
+    marginRight: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  backButtonText: {
+    color: 'blue',
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 18,
@@ -179,6 +138,11 @@ const styles = StyleSheet.create({
   },
   friendName: {
     marginLeft: 10,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
 });
 
