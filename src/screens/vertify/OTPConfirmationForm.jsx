@@ -9,7 +9,7 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import verifiedImage from "./verified.gif"; // Import image
+import verifiedImage from "./verified.gif"; 
 import { Auth } from "../../untills/context/SignupContext";
 import { postEmail, postValidRegister, removeCookie } from "../../untills/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";

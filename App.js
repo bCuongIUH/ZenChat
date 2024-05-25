@@ -71,8 +71,16 @@ function App() {
                 name="ForgotPasswordScreen"
                 component={ForgotPasswordScreen}
               />
-              <Stack.Screen name="Time" component={Time} />
-
+              {/* <Stack.Screen name="Time" component={Time} /> */}
+              <Stack.Screen name="Time">
+                {() => (
+                  <RequireAuth>
+                    <UserProvider>
+                      <Time /> 
+                    </UserProvider>
+                  </RequireAuth>
+                )}
+              </Stack.Screen>
               <Stack.Screen name="Friend" component={Friend} />
 
               <Stack.Screen name="User" component={User} />

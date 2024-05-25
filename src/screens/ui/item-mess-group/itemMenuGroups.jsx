@@ -126,6 +126,9 @@ const ItemMenuGroups = ({route}) => {
       <View style={styles.avatarContainer}>
         <Image source={ group.avtGroups} style={styles.itemImage} />
         <Text style={styles.itemName}>{setTingNameGroups(group)}</Text>
+        <TouchableOpacity>
+          
+        </TouchableOpacity>
       </View>
 
       <View style={styles.optionsContainer}>

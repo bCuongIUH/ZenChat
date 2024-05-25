@@ -1,16 +1,16 @@
 import React, { useRef, useState, useContext, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Modal, ScrollView ,Picker} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../../untills/context/AuthContext';
 import { updateAccount, updateImageBg, updateImageAVT } from '../../../untills/api';
 import * as ImagePicker from 'expo-image-picker';
 
 const ItemUpdateUser = () => {
-    const [isActive, setIsActive] = useState(false); // Cảm giác nút bấm
-    const [isLoading, setIsLoading] = useState(false); // modal loading xoay xoay
-    const [showSuccessModal, setShowSuccessModal] = useState(false); // modal success tick xanh uy tín
-    const [showErrorModal, setShowErrorModal] = useState(false); // Modal errr
-    const [errorMessage, setErrorMessage] = useState(''); // Định nghĩa errorMessage và setErrorMessage
+    const [isActive, setIsActive] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const { user } = useContext(AuthContext);
     const [avatar, setAvatar] = useState(user.avatar);
     const [background, setBackground] = useState(user.background);
@@ -20,9 +20,8 @@ const ItemUpdateUser = () => {
     const navigation = useNavigation();
     const [filePathAvatar, setFilePathAvatar] = useState([]);
     const [filePathBackground, setFilePathBackground] = useState([]);
-    const [isDataChanged, setIsDataChanged] = useState(false); // Trạng thái xác định liệu dữ liệu đã được thay đổi hay không
+    const [isDataChanged, setIsDataChanged] = useState(false);
 
-    // Hàm xác định xem dữ liệu đã được thay đổi hay không
     const checkDataChanged = () => {
         if (
             name !== user.fullName ||
@@ -31,9 +30,9 @@ const ItemUpdateUser = () => {
             avatar !== user.avatar ||
             background !== user.background
         ) {
-            setIsDataChanged(true); // Nếu có bất kỳ sự thay đổi nào, đặt isDataChanged thành true
+            setIsDataChanged(true);
         } else {
-            setIsDataChanged(false); // Ngược lại, đặt isDataChanged thành false
+            setIsDataChanged(false);
         }
     };
 
@@ -88,17 +87,21 @@ const ItemUpdateUser = () => {
         setName(e.nativeEvent.text);
     };
 
-    const handleGenderChange = (e) => {
-        setGender(e.nativeEvent.text);
+    const handleGenderChange = (selectedGender) => {
+        setGender(selectedGender);
     };
 
-    const handleDateOfBirthChange = (e) => {
-        setDateOfBirth(e.nativeEvent.text);
+    const handleDateChange = (type, value) => {
+        const dateParts = dateOfBirth.split('-');
+        if (type === 'year') dateParts[0] = value;
+        if (type === 'month') dateParts[1] = value;
+        if (type === 'day') dateParts[2] = value;
+        setDateOfBirth(dateParts.join('-'));
     };
 
     const handleUpdate = () => {
-        setIsActive(true); // Kích hoạt hiệu ứng khi nút được click
-        setIsLoading(true); // Hiển thị modal loading
+        setIsActive(true);
+        setIsLoading(true);
 
         const data = {
             fullName: name,
@@ -110,8 +113,8 @@ const ItemUpdateUser = () => {
 
         if (!regexPatterns.fullName.test(name)) {
             setErrorMessage('Please enter the name in the correct format.');
-            setShowErrorModal(true); // Hiển thị modal error
-            setIsLoading(false); // Ẩn modal loading
+            setShowErrorModal(true);
+            setIsLoading(false);
             return;
         }
 
@@ -119,8 +122,8 @@ const ItemUpdateUser = () => {
         const currentDate = new Date();
         if (dobDate >= currentDate) {
             setErrorMessage('Date of birth must be before today.');
-            setShowErrorModal(true); // Hiển thị modal error
-            setIsLoading(false); // Ẩn modal loading
+            setShowErrorModal(true);
+            setIsLoading(false);
             return;
         }
 
@@ -131,8 +134,8 @@ const ItemUpdateUser = () => {
                 .then(resUpdate => {
                     if (resUpdate.status === 200) {
                         setTimeout(() => {
-                            setIsLoading(false); // Ẩn modal loading
-                            setShowSuccessModal(true); // Hiển thị modal thông báo thành công
+                            setIsLoading(false);
+                            setShowSuccessModal(true);
 
                             setTimeout(() => {
                                 setShowSuccessModal(false);
@@ -140,14 +143,13 @@ const ItemUpdateUser = () => {
                             }, 2000);
                         }, 5000);
                     } else {
-
-                        setIsLoading(false); // Ẩn modal loading
+                        setIsLoading(false);
                         setErrorMessage('You are not the owner of this account');
                         setShowErrorModal(true);
                     }
                 })
                 .catch((err) => {
-                    setIsLoading(false); // Ẩn modal loading
+                    setIsLoading(false);
                     setErrorMessage('Fail to upload User');
                     setShowErrorModal(true);
                 });
@@ -182,7 +184,7 @@ const ItemUpdateUser = () => {
 
                 handleUpdateAccount(avtUrl, bgUrl);
             } catch (err) {
-                setIsLoading(false); // Ẩn modal loading
+                setIsLoading(false);
                 setErrorMessage('Fail to upload images');
                 setShowErrorModal(true);
             }
@@ -191,8 +193,18 @@ const ItemUpdateUser = () => {
         handleUpdateImages();
     };
 
+    const renderPickerItems = (start, end) => {
+        const items = [];
+        for (let i = start; i <= end; i++) {
+            items.push(<Picker.Item key={i} label={i.toString()} value={i.toString()} />);
+        }
+        return items;
+    };
+
+    const [year, month, day] = dateOfBirth.split('-');
+
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.container}>
             <View style={styles.sectionOne}>
                 <View style={styles.titleSectionOne}>
                     <TouchableOpacity onPress={handleBackHome} style={styles.backButton}>
@@ -202,43 +214,74 @@ const ItemUpdateUser = () => {
                 </View>
             </View>
 
-            <View style={styles.sectionTwo}>
-                <View style={styles.imageContainer}>
-                    <Image source={{ uri: background }} style={styles.backgroundImage} />
-                    <TouchableOpacity onPress={handleEditAvatar} style={styles.avatarContainer}>
-                        <Image source={{ uri: avatar }} style={styles.avatarImage} />
-                    </TouchableOpacity>
-                </View>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <View style={styles.sectionTwo}>
+                    <View style={styles.imageContainer}>
+                        <Image source={{ uri: background }} style={styles.backgroundImage} />
+                        <TouchableOpacity onPress={handleEditAvatar} style={styles.avatarContainer}>
+                            <Image source={{ uri: avatar }} style={styles.avatarImage} />
+                        </TouchableOpacity>
+                    </View>
 
-                <View style={styles.infoContainer}>
-                    <Text style={styles.header}>Thông tin cá nhân</Text>
-                    <Text style={styles.label}>Tên</Text>
-                    <TextInput
-                        value={name}
-                        onChange={handleNameChange}
-                        style={styles.input}
-                    />
-                    <Text style={styles.label}>Giới tính</Text>
-                    <TextInput
-                        value={gender}
-                        onChange={handleGenderChange}
-                        style={styles.input}
-                    />
-                    <Text style={styles.label}>Ngày Sinh</Text>
-                    <TextInput
-                        value={dateOfBirth}
-                        onChange={handleDateOfBirthChange}
-                        placeholder="YYYY-MM-DD"
-                        style={styles.input}
-                    />
-                    <Button
-                        title="Update"
-                        onPress={handleUpdate}
-                        color={isDataChanged ? 'orange' : 'grey'}
-                        disabled={!isDataChanged}
-                    />
+                    <View style={styles.infoContainer}>
+                        <Text style={styles.header}>Thông tin cá nhân</Text>
+                        <Text style={styles.label}>Tên</Text>
+                        <TextInput
+                            value={name}
+                            onChange={handleNameChange}
+                            style={styles.input}
+                        />
+                        <Text style={styles.label}>Giới tính</Text>
+                        <View style={styles.genderContainer}>
+                            <TouchableOpacity
+                                style={styles.checkboxContainer}
+                                onPress={() => handleGenderChange('Nam')}
+                            >
+                                <View style={[styles.checkbox, gender === 'Nam' && styles.checkedCheckbox]} />
+                                <Text style={styles.checkboxLabel}>Nam</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.checkboxContainer}
+                                onPress={() => handleGenderChange('Nữ')}
+                            >
+                                <View style={[styles.checkbox, gender === 'Nữ' && styles.checkedCheckbox]} />
+                                <Text style={styles.checkboxLabel}>Nữ</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={styles.label}>Ngày Sinh</Text>
+                        <View style={styles.dateContainer}>
+                            <Picker
+                                selectedValue={year}
+                                onValueChange={(value) => handleDateChange('year', value)}
+                                style={styles.datePicker}
+                            >
+                                {renderPickerItems(1900, new Date().getFullYear())}
+                            </Picker>
+                            <Picker
+                                selectedValue={month}
+                                onValueChange={(value) => handleDateChange('month', value)}
+                                style={styles.datePicker}
+                            >
+                                {renderPickerItems(1, 12)}
+                            </Picker>
+                            <Picker
+                                selectedValue={day}
+                                onValueChange={(value) => handleDateChange('day', value)}
+                                style={styles.datePicker}
+                            >
+                                {renderPickerItems(1, 31)}
+                            </Picker>
+                        </View>
+                        <Button
+                            title="Update"
+                            onPress={handleUpdate}
+                            color={isDataChanged ? 'orange' : 'grey'}
+                            disabled={!isDataChanged}
+                            style={styles.updateButton}
+                        />
+                    </View>
                 </View>
-            </View>
+            </ScrollView>
 
             {isLoading && (
                 <Modal
@@ -286,18 +329,26 @@ const ItemUpdateUser = () => {
                     </View>
                 </Modal>
             )}
-        </ScrollView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
+        flex: 1,
         backgroundColor: 'white',
+    },
+    scrollContainer: {
+        paddingBottom: 20,
     },
     sectionOne: {
         backgroundColor: "#ff8c00",
         padding: 20,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1,
     },
     titleSectionOne: {
         flexDirection: 'row',
@@ -317,6 +368,7 @@ const styles = StyleSheet.create({
     },
     sectionTwo: {
         padding: 20,
+        paddingTop: 80, // Added to prevent content being hidden under the fixed header
     },
     imageContainer: {
         alignItems: 'center',
@@ -338,7 +390,7 @@ const styles = StyleSheet.create({
         borderColor: 'white',
     },
     infoContainer: {
-        marginTop: 70, // Increased margin to accommodate the avatar overlap
+        marginTop: 70,
     },
     header: {
         fontSize: 20,
@@ -355,6 +407,50 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         padding: 10,
         marginBottom: 10,
+    },
+    genderContainer: {
+        flexDirection: 'row',
+        marginBottom: 10,
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 20,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderWidth: 1,
+        borderColor: 'gray',
+        marginRight: 10,
+    },
+    checkedCheckbox: {
+        backgroundColor: "#ff8c00",
+        borderRadius: 20,
+    },
+    checkboxLabel: {
+        fontSize: 16,
+    },
+    picker: {
+        height: 50,
+        width: '100%',
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    dateContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    datePicker: {
+        width: '30%',
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+    },
+    updateButton: {
+        marginTop: 10,
     },
     modalContainer: {
         flex: 1,

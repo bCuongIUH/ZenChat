@@ -14,7 +14,7 @@ import { KeyboardAvoidingView } from 'react-native';
 export const Messages = ({ route }) => {
 
   const { room} = route.params;
-console.log("id",room.friends);
+
   const [messages, setMessages] = useState([]);
   const socket = useContext(SocketContext);
   const [texting, setTexting] = useState("");

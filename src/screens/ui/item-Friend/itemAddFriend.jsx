@@ -25,12 +25,13 @@ const ItemAddFriend = () => {
   const [authFound, setAuthFound] = useState([]);
   const [isAddClicked, setIsAddClicked] = useState(false);
   const [showFriendList, setShowFriendList] = useState(false);
+  const [error, setError] = useState(""); 
   const navigation = useNavigation();
   const socket = useContext(SocketContext);
   const formRef = useRef(null);
   const [rooms, setRooms] = useState([]);
   const [friendList, setFriendList] = useState([]);
-  const [showSearchBar, setShowSearchBar] = useState(true); // Thêm state mới cho trạng thái của thanh tìm kiếm
+  const [showSearchBar, setShowSearchBar] = useState(true);
 
   const handleSearchChange = (text) => {
     setPhoneNumber(text);
@@ -60,14 +61,13 @@ const ItemAddFriend = () => {
     createRooms(data1)
       .then((res) => {
         if (res.data.message === "Đã tạo phòng với User này ròi") {
-          alert("Đã tạo phòng với User này ròi !!!");
+          setError("Đã tạo phòng với User này ròi !!!");
           return;
         }
         if (res.data.status === 400) {
-          alert("Không thể nhắn tin với chính bản thân mình !!!");
+          setError("Không thể nhắn tin với chính bản thân mình !!!");
           return;
         } else {
-          // window.location.reload();
           const idFriend = {
             id: res.data.recipient._id,
           };
@@ -78,17 +78,16 @@ const ItemAddFriend = () => {
                 if (formRef.current) {
                   formRef.current.style.display = "none";
                 }
-                alert("Gửi lời mời kết bạn thành công");
-
+                setError("Gửi lời mời kết bạn thành công");
                 return;
               } else {
-                alert("Gửi lời mời kết bạn không thành công");
+                setError("Gửi lời mời kết bạn không thành công");
                 return;
               }
             })
             .catch((error) => {
               console.log(error);
-              alert("Lỗi hệ thống");
+              setError("Lỗi hệ thống");
             });
           const roomInfo = res.data.room;
           socket.emit("newRoomCreated", roomInfo);
@@ -97,7 +96,7 @@ const ItemAddFriend = () => {
       })
       .catch((err) => {
         console.log(err);
-        alert("Lỗi hệ thống");
+        setError("Lỗi hệ thống");
       });
     setPhoneNumber("");
     setAuthFound([]);
@@ -108,32 +107,26 @@ const ItemAddFriend = () => {
   }, [authFound]);
 
   useEffect(() => {
-        
     socket.on(`updateLastMessages${user.email}`, lastMessageUpdate => {
         setRooms(prevRooms => {
-            // Cập nhật phòng đã được cập nhật
             return prevRooms.map(room => {
                 if (room === undefined || lastMessageUpdate === undefined) {
                     return room;
                 }
                 if (room._id === lastMessageUpdate._id) {
-
                     return lastMessageUpdate;
                 }
                 return room;
             });
         });
-
     })
     socket.on(`updateLastMessagesed${user.email}`, lastMessageUpdate => {
         setRooms(prevRooms => {
-            // Cập nhật phòng đã được cập nhật
             return prevRooms.map(room => {
                 if (room === undefined || lastMessageUpdate === undefined) {
                     return room;
                 }
                 if (room._id === lastMessageUpdate._id) {
-
                     return lastMessageUpdate;
                 }
                 return room;
@@ -152,25 +145,19 @@ useEffect(() => {
     socket.on(`updateSendedFriend${user.email}`, roomsU => {
         if (roomsU) {
             setRooms(prevRooms => {
-                // Cập nhật phòng đã được cập nhật
                 return prevRooms.map(room => {
                     if (room._id === roomsU._id) {
                         return roomsU;
                     }
-                    
                     return room;
                 });
             });  
-            
             updateRoomFriend(roomsU);
-            
         }
-        
     })
     socket.on(`updateAcceptFriendsGroups${user.email}`, data => {
         if (data) {
             setFriendCreateGroup(prevGroups => [...prevGroups, data])
-           
         }
     })
     socket.on(`updateUnFriendsGroups${user.email}`, data => {
@@ -187,13 +174,13 @@ useEffect(() => {
 },[])
   
   const handleShowFriendList = () => {
-    setShowSearchBar(true); // Show search bar when switching to friend list view
+    setShowSearchBar(true); 
     setShowFriendList(true);
   };
+ 
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="black" />
@@ -201,7 +188,6 @@ useEffect(() => {
         <Text style={styles.headerText}>Thêm bạn bè</Text>
       </View>
   
-      {/* Current User Info */}
       <View style={styles.userInfoContainer}>
         <View style={styles.userInfo}>
           <Image
@@ -211,11 +197,11 @@ useEffect(() => {
           <View style={styles.textContainer}>
             <Text style={styles.fullName}>{user.fullName}</Text>
             <Image source={require('./QR.png')} style={styles.qrCode} />
-          </View>
+         
+            </View>
         </View>
       </View>
   
-      {/* Search Bar */}
       {showSearchBar && (
         <View style={styles.searchContainer}>
           <TextInput
@@ -230,7 +216,6 @@ useEffect(() => {
         </View>
       )}
   
-      {/* Content */}
       {authFound.length > 0 && (
         <View style={styles.userInfoContainer}>
           <View style={styles.userInfo}>
@@ -245,7 +230,6 @@ useEffect(() => {
               </Text>
             </View>
           </View>
-          {/* Add friend button and cancel button */}
           <View style={styles.buttonContainer}>
             {!isAddClicked ? (
               <TouchableOpacity onPress={handleAddClick}>
@@ -260,7 +244,6 @@ useEffect(() => {
         </View>
       )}
   
-      {/* Friend list */}
       {showFriendList && (
         <FlatList
           data={friendList}
@@ -278,14 +261,20 @@ useEffect(() => {
           keyExtractor={(item) => item.id}
         />
       )}
+      {/* Thêm phần hiển thị thông báo lỗi */}
+      {error !== "" && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
     </View>
   );
-  
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "flex-start", // Thay đổi từ "center" thành "flex-start"
+    justifyContent: "flex-start", 
     alignItems: "center",
   },
   header: {

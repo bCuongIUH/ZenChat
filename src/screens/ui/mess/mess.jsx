@@ -1,3 +1,4 @@
+
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, Image, Platform ,Linking } from "react-native";
 import { getRoomsMessages, createMessage, acceptFriends, createMessagesFile, deleteMessages } from "../../../untills/api";
@@ -924,7 +925,7 @@ const styles = StyleSheet.create({
   },
   optionsButton: {
     position: "absolute",
-    left: 50, // Đặt dấu ba chấm bên trái của layout tin nhắn
+    left: 50, 
     top: "50%", // Đặt dấu ba chấm ở giữa chiều dọc
     transform: [{ translateY: 10 }], // Dịch chuyển dấu ba chấm lên trên một chút để căn giữa
   },
@@ -935,7 +936,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     elevation: 4,
     borderRadius: 5,
-    transform: [{ translateY: -20 }], // Dịch chuyển menu xuống dưới một chút
+    transform: [{ translateY: -20 }], 
   },
   optionButton: {
     padding: 10,

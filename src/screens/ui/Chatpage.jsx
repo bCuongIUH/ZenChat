@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext ,useRef} from "react";
 import {
   View,
   TextInput,
@@ -15,7 +15,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
-import { getListRooms, getListGroups, deleteRooms } from "../../untills/api";
+import { getListRooms, getListGroups, deleteRooms,unFriendsUser } from "../../untills/api";
 import { AuthContext } from "../../untills/context/AuthContext";
 import { SocketContext } from "../../untills/context/SocketContext";
 import { useRoute } from '@react-navigation/native';
@@ -28,8 +28,7 @@ export const Chatpage = () => {
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isActionModalVisible, setActionModalVisible] = useState(false);
-  const [isFriendActionModalVisible, setFriendActionModalVisible] =
-    useState(false);
+  const [isFriendActionModalVisible, setFriendActionModalVisible] = useState(false);
   const [todoList, setTodoList] = useState([]);
   const [filteredTodoList, setFilteredTodoList] = useState([]);
   const [searchStarted, setSearchStarted] = useState(false);
@@ -243,8 +242,9 @@ const getDisplayLastMessagesGroups = (messages) => {
   };
   
  
+  
 
- 
+  
 
   useEffect(() => {
         
@@ -329,11 +329,83 @@ useEffect(() => {
     setIsFriend(friend(user._id));
     setFriendActionModalVisible(true);
   }
-
-  const handleUnfriend = (existingRoom) => {
-    // Your code to handle unfriending
+  const formRef = useRef(null);
+  const [selectedFriendId, setSelectedFriendId] = useState(null);
+  
+  const selectFriend = (id) => {
+    setSelectedFriendId(id);
   };
 
+
+
+  const handleUnfriend = (id) => {
+    
+    const userReciever1 = { id: id };
+    unFriendsUser(userReciever1)
+      .then((resUser) => {
+        if (resUser.data.emailUserActions) {
+          setErrorMessage('Hủy kết bạn thành công');
+          setShowErrorModal(true);
+          setTimeout(() => {
+            setShowErrorModal(false);
+          }, 2000);
+
+          const idP = { idRooms: resUser.data.roomsUpdate };
+          const userAction = { id: user._id };
+          deleteRooms(userAction.id, idP.idRooms)
+            .then((resData) => {
+              if (resData.data.creator) {
+                console.log(resData.data);
+                setErrorMessage('Huỷ kết bạn thành công');
+                setShowErrorModal(true);
+                setTimeout(() => {
+                  setShowErrorModal(false);
+                }, 2000);
+              } else {
+                setErrorMessage('Huỷ phòng không thành công');
+                setShowErrorModal(true);
+                setTimeout(() => {
+                  setShowErrorModal(false);
+                }, 2000);
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              setErrorMessage('Lỗi hủy phòng');
+              setShowErrorModal(true);
+              setTimeout(() => {
+                setShowErrorModal(false);
+              }, 2000);
+            });
+        } else {
+          setErrorMessage('Huỷ kết bạn không thành công');
+          setShowErrorModal(true);
+          setTimeout(() => {
+            setShowErrorModal(false);
+          }, 2000);
+        }
+      })
+      .catch((error) => {
+        setErrorMessage('Lỗi server');
+        setShowErrorModal(true);
+        console.log(error);
+        setTimeout(() => {
+          setShowErrorModal(false);
+        }, 2000);
+      });
+    
+  
+    // setPhoneNumber('');
+    // setAuthFound([]);
+    if (formRef.current) {
+      formRef.current.style.display = 'none';
+    }
+  };
+
+  const [showErrorModal, setShowErrorModal] = useState(false) // Modal errr
+
+
+  const [errorMessage, setErrorMessage] = useState('');
   const handleAcceptFriendRequest = (user) => {
     console.log("chấp nhận kết bạn thành công:", user);
   };
@@ -402,12 +474,27 @@ useEffect(() => {
   }
 }, [searchStarted, searchText, selectedFunction]);
 
-
+// update list room
+const updateListRooms = (updatedRoom) => {
+  setRooms(prevRooms => {
+      // Cập nhật phòng đã được cập nhật
+      return prevRooms.map(room => {
+          if (room === undefined || updatedRoom === undefined) {
+              return room;
+          }
+          if (room._id === updatedRoom._id) {
+             
+              return updatedRoom;
+          }
+          return room;
+      });
+  });
+};
 
 //socket
 useEffect(() => {
   socket.on('connected', () => console.log('Connected'));
-  socket.on(user.email, roomSocket => {
+  socket.on(`create ${user.email}`, roomSocket => {
       setRooms(prevRooms => [...prevRooms, roomSocket]);
 
   })
@@ -657,7 +744,7 @@ useEffect(() => {
               {isFriend ? (
                 <TouchableOpacity
                   style={styles.modalbtn}
-                  onPress={() => handleUnfriend()}
+                  onPress={() => handleUnfriend(selectedFriendId)}
                 >
                   <Text style={styles.modalOption}>Unfriend</Text>
                 </TouchableOpacity>
@@ -684,7 +771,7 @@ useEffect(() => {
       data={selectedFunction === "personal" ? rooms : groups}
       renderItem={({ item }) => {
         if (selectedFunction === "group") {
-          // Nếu người dùng chọn chat nhóm, chỉ hiển thị danh sách nhóm
+     
           const groupIDs = getDisplayGroup(item);
           return (
             <TouchableOpacity
@@ -697,7 +784,7 @@ useEffect(() => {
             </TouchableOpacity>
           );
         } else {
-          // Nếu người dùng chọn chat đơn, chỉ hiển thị danh sách chat đơn
+         
           const displayUser = getDisplayUser(item);
           return (
             <TouchableOpacity

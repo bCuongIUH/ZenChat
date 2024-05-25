@@ -1008,6 +1008,7 @@ const handleEmoji = () => {
           <View style={styles.headerContent}>
             <Image source={ updateImageGroup} style={styles.itemImage} />
              <Text style={styles.itemName}>{setTingNameGroups(group)}</Text>
+             
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.headerButton}>

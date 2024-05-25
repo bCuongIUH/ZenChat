@@ -39,7 +39,7 @@ const ItemGroup = ({ link, nameGroup, action, time, tt, onClick }) => {
       <Text>{mouse ? <TouchableOpacity onPress={handleBtn}><Text>...</Text></TouchableOpacity> : time}</Text>
       {btnForm && (
         <View style={styles.btnForm}>
-          {/* Your form components */}
+          
         </View>
       )}
     </TouchableOpacity>

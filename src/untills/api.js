@@ -491,3 +491,27 @@ export const kickGroups = async (data) => {
   })
 }
 
+//unfriends  User
+export const unFriendsUser = async(data) => {
+  return new Promise((reject, resolve) => {
+      axios.post(`${API_URL}/friends/unfriendUser`,data,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(err => {
+          resolve(err);
+      })
+  })
+}
+// update groups 
+export const updateGroups = async (data) => {
+  return new Promise((reject, resolve) => {
+      axios.post(`${API_URL}/groups/updateGroups`,data,config)
+      .then(res => {
+          reject(res);
+      })
+      .catch(error => {
+          resolve(error)
+      })
+  })
+}
